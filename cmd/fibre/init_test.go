@@ -304,3 +304,15 @@ func TestInitSetRefusesHomeUnlessStrict(t *testing.T) {
 	assertRealFile(t, filepath.Join(home, ".zshrc"), "z")
 	assertMissing(t, filepath.Join(e.root, "zsh", ".zshrc"))
 }
+
+func TestInitSetShortFlags(t *testing.T) {
+	e := newEnv(t)
+	dest := filepath.Join(e.base, "d")
+	if out, err := run(t, "init", "claude", "-d", dest, "-e", "a,b", "-s"); err != nil {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	want := "dest: " + dest + "\nexclude:\n    - a\n    - b\nstrict: true\n"
+	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != want {
+		t.Errorf("fibre.yaml = %q, want %q", got, want)
+	}
+}

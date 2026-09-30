@@ -373,3 +373,27 @@ func TestLinkWhileLocked(t *testing.T) {
 		t.Errorf("err = %v, want ErrLocked", err)
 	}
 }
+
+func TestLinkShortFlags(t *testing.T) {
+	for flag, check := range map[string]func(t *testing.T, setDir, dest string){
+		"-a": func(t *testing.T, setDir, dest string) {
+			assertRealFile(t, filepath.Join(setDir, "settings.json"), "mine")
+		},
+		"-f": func(t *testing.T, setDir, dest string) {
+			assertRealFile(t, filepath.Join(dest, "settings.json.fibre-bak"), "mine")
+		},
+		"-s": func(t *testing.T, setDir, dest string) {
+			assertRealFile(t, filepath.Join(dest, "settings.json"), "mine")
+		},
+	} {
+		t.Run(flag, func(t *testing.T) {
+			e := newEnv(t)
+			setDir, dest := claudeSet(t, e)
+			writeFile(t, filepath.Join(dest, "settings.json"), "mine")
+			if out, err := run(t, "link", "claude", flag); err != nil {
+				t.Fatalf("link %s: %v\n%s", flag, err, out)
+			}
+			check(t, setDir, dest)
+		})
+	}
+}

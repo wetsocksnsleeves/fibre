@@ -40,9 +40,9 @@ func newLinkCmd() *cobra.Command {
 			return runLink(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], r)
 		},
 	}
-	cmd.Flags().BoolVar(&adopt, "adopt", false, "move conflicting dest files into the set, then link")
-	cmd.Flags().BoolVar(&force, "force", false, "back up conflicting dest paths, then link the set's version")
-	cmd.Flags().BoolVar(&skip, "skip", false, "leave conflicting paths alone and link everything else")
+	cmd.Flags().BoolVarP(&adopt, "adopt", "a", false, "move conflicting dest files into the set, then link")
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "back up conflicting dest paths, then link the set's version")
+	cmd.Flags().BoolVarP(&skip, "skip", "s", false, "leave conflicting paths alone and link everything else")
 	cmd.MarkFlagsMutuallyExclusive("adopt", "force", "skip")
 	return cmd
 }
