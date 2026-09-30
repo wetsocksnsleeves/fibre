@@ -24,4 +24,4 @@ tools → ~/.local   1 linked
 
 zsh → ~   not linked (run `fibre link zsh`)
 
-Watcher is not running, so nothing is synced automatically. Start it with `fibre watch run`.
+Watcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground).
