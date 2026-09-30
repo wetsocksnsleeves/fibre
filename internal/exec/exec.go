@@ -89,8 +89,12 @@ func replaceWithLink(setPath, destPath string) error {
 	return nil
 }
 
-// adopt moves the file at destPath over setPath, then links destPath to it.
+// adopt moves the file at destPath over setPath, creating setPath's parent
+// directories if needed, then links destPath to it.
 func adopt(setPath, destPath string) error {
+	if err := os.MkdirAll(filepath.Dir(setPath), 0o755); err != nil {
+		return err
+	}
 	if err := move(destPath, setPath); err != nil {
 		return err
 	}

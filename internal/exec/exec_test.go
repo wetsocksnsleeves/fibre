@@ -89,6 +89,18 @@ func TestApplyAdopt(t *testing.T) {
 	assertLink(t, filepath.Join(dest, "a"), filepath.Join(setDir, "a"))
 }
 
+func TestApplyAdoptCreatesSetParents(t *testing.T) {
+	setDir, dest := dirs(t)
+	write(t, filepath.Join(dest, "a", "b", "c"), "c")
+	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpAdopt, Path: "a/b/c"}}); err != nil {
+		t.Fatal(err)
+	}
+	if got := read(t, filepath.Join(setDir, "a", "b", "c")); got != "c" {
+		t.Errorf("set file = %q", got)
+	}
+	assertLink(t, filepath.Join(dest, "a", "b", "c"), filepath.Join(setDir, "a", "b", "c"))
+}
+
 func TestApplyBackupThenLink(t *testing.T) {
 	setDir, dest := dirs(t)
 	write(t, filepath.Join(setDir, "a"), "set")
