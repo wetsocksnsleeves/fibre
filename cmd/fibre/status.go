@@ -36,7 +36,7 @@ dest it shows only that set; pass --all to show every set.`,
 				}
 				only = args[0]
 			}
-			return runStatus(cmd.OutOrStdout(), only, all, verbose)
+			return runStatus(cmd.OutOrStdout(), only, all, verbose, useColor(cmd.OutOrStdout()))
 		},
 	}
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "list every link")
@@ -44,14 +44,21 @@ dest it shows only that set; pass --all to show every set.`,
 	return cmd
 }
 
-// setStatus is one line of status output and the paths listed under it.
+// setStatus is one set's block of status output.
 type setStatus struct {
 	name, dest string
 	summary    string
-	lines      []string
+	groups     []group
 }
 
-func runStatus(w io.Writer, only string, all, verbose bool) error {
+// group is a heading and the paths listed under it.
+type group struct {
+	heading string
+	tone    tone
+	items   []string
+}
+
+func runStatus(w io.Writer, only string, all, verbose, color bool) error {
 	if only != "" {
 		if err := validateSetName(only); err != nil {
 			return err
@@ -109,7 +116,7 @@ func runStatus(w io.Writer, only string, all, verbose bool) error {
 		case linked == nil && cfgErr != nil:
 			ss.summary = "error: " + cfgErr.Error()
 		case linked == nil:
-			ss.dest, ss.summary = displayPath(cfg.Dest), "not linked"
+			ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `fibre link %s`)", name)
 		case cfgErr != nil:
 			ss.dest, ss.summary = displayPath(linked.Dest), "error: "+cfgErr.Error()
 		case cfg.Dest != linked.Dest:
@@ -130,7 +137,7 @@ func runStatus(w io.Writer, only string, all, verbose bool) error {
 		s := states[i]
 		ss := statuses[p.Name]
 		linked := plan.Linked(plan.LinkInput{SetDir: s.SetDir, Dest: s.Dest, Set: s.Set, DestTree: s.DestTree, Excluded: s.Excluded})
-		ss.summary, ss.lines = describePlan(s, p.Actions, linked, verbose)
+		ss.summary, ss.groups = describePlan(s, p.Actions, linked, verbose)
 	}
 
 	var shown []*setStatus
@@ -139,8 +146,9 @@ func runStatus(w io.Writer, only string, all, verbose bool) error {
 			shown = append(shown, statuses[name])
 		}
 	}
-	printStatus(w, shown)
-	fmt.Fprintln(w, "watcher: not running")
+	printStatus(w, shown, color)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "Watcher is not running, so nothing is synced automatically.")
 	return nil
 }
 
@@ -185,107 +193,129 @@ func reconcileSnapshot(name, setDir string, cfg *config.Config, links []string, 
 	}, nil
 }
 
-// statusKinds are the labels status uses, in summary order.
-var statusKinds = []struct {
-	label, singular, plural string
-}{
-	{"CONFLICT", "conflict", "conflicts"},
-	{"UNLINKED", "unlinked", "unlinked"},
-	{"MODIFIED", "modified", "modified"},
-	{"DELETED", "deleted", "deleted"},
-	{"DANGLING", "dangling", "dangling"},
-	{"UNTRACKED", "untracked", "untracked"},
-}
+// statusKind is one heading in a set's block. Kinds are listed in this
+// order, most urgent first.
+type statusKind int
 
-// statusLabel names what an action means for the user. Directory creation
-// is part of linking and has no line of its own.
-func statusLabel(s plan.SetState, a plan.Action) string {
-	switch a.Op {
-	case plan.OpConflict:
-		return "CONFLICT"
-	case plan.OpLink, plan.OpReplaceWithLink:
-		return "UNLINKED"
-	case plan.OpAdopt:
-		if _, inSet := s.Set[a.Path]; inSet {
-			return "MODIFIED"
-		}
-		return "UNTRACKED"
-	case plan.OpDeleteSetFile:
-		return "DELETED"
-	case plan.OpRemoveLink:
-		return "DANGLING"
-	case plan.OpUntracked:
-		return "UNTRACKED"
+const (
+	kindConflict statusKind = iota
+	kindUnlinked
+	kindModified
+	kindDeleted
+	kindDangling
+	kindUntracked
+	kindTied
+	kindLinked
+)
+
+func (k statusKind) heading(set string) string {
+	switch k {
+	case kindConflict:
+		return fmt.Sprintf("Conflicts (resolve with `fibre link %s` and --adopt, --force or --skip):", set)
+	case kindUnlinked:
+		return fmt.Sprintf("Not linked (new in the set; the watcher or `fibre link %s` will link them):", set)
+	case kindModified:
+		return "Modified in dest (a real file replaced the link; the watcher will copy it into the set):"
+	case kindDeleted:
+		return "Deleted from dest (the watcher will delete the set's copy):"
+	case kindDangling:
+		return "Deleted from the set (the watcher will remove the link):"
+	case kindUntracked:
+		return "Untracked (new in dest; the watcher will adopt them):"
+	case kindTied:
+		return "Untracked, claimed by more than one set (exclude it from all but one):"
+	case kindLinked:
+		return "Linked:"
 	}
 	return ""
 }
 
-func describePlan(s plan.SetState, actions []plan.Action, linked []string, verbose bool) (string, []string) {
-	type line struct{ path, text string }
-	var lines []line
-	counts := map[string]int{}
-	for _, a := range actions {
-		label := statusLabel(s, a)
-		if label == "" {
-			continue
-		}
-		counts[label]++
-		text := fmt.Sprintf("%-10s %s", label, a.Path)
-		switch label {
-		case "CONFLICT":
-			text += "  (" + describeConflict(a) + ")"
-		case "UNLINKED":
-			text += "  (in the set, not linked yet)"
-		case "MODIFIED":
-			text += "  (link replaced by a real file)"
-		case "DELETED":
-			text += "  (link removed from dest)"
-		case "DANGLING":
-			text += "  (set file deleted)"
-		case "UNTRACKED":
-			if a.Op == plan.OpUntracked {
-				text += "  (claimed by " + strings.Join(a.Tied, " and ") + ")"
-			}
-		}
-		lines = append(lines, line{a.Path, text})
+func (k statusKind) tone() tone {
+	switch k {
+	case kindConflict:
+		return toneBad
+	case kindLinked:
+		return toneGood
 	}
-	if verbose {
-		for _, p := range linked {
-			lines = append(lines, line{p, fmt.Sprintf("%-10s %s", "LINKED", p)})
-		}
-	}
-	sort.SliceStable(lines, func(i, j int) bool { return lines[i].path < lines[j].path })
-
-	parts := []string{fmt.Sprintf("%d linked", len(linked))}
-	for _, k := range statusKinds {
-		switch n := counts[k.label]; n {
-		case 0:
-		case 1:
-			parts = append(parts, "1 "+k.singular)
-		default:
-			parts = append(parts, fmt.Sprintf("%d %s", n, k.plural))
-		}
-	}
-	if len(parts) == 1 {
-		parts = append(parts, "ok")
-	}
-	out := make([]string, len(lines))
-	for i, l := range lines {
-		out[i] = l.text
-	}
-	return strings.Join(parts, "  "), out
+	return toneWarn
 }
 
-func printStatus(w io.Writer, sets []*setStatus) {
-	nameWidth, destWidth := 0, 0
-	for _, s := range sets {
-		nameWidth = max(nameWidth, len(s.name))
-		destWidth = max(destWidth, len(s.dest))
+// statusKindOf says which heading an action goes under. Directory creation
+// is part of linking and is not listed.
+func statusKindOf(s plan.SetState, a plan.Action) (statusKind, bool) {
+	switch a.Op {
+	case plan.OpConflict:
+		return kindConflict, true
+	case plan.OpLink, plan.OpReplaceWithLink:
+		return kindUnlinked, true
+	case plan.OpAdopt:
+		if _, inSet := s.Set[a.Path]; inSet {
+			return kindModified, true
+		}
+		return kindUntracked, true
+	case plan.OpDeleteSetFile:
+		return kindDeleted, true
+	case plan.OpRemoveLink:
+		return kindDangling, true
+	case plan.OpUntracked:
+		return kindTied, true
 	}
-	for _, s := range sets {
-		fmt.Fprintf(w, "%-*s  %-*s  %s\n", nameWidth, s.name, destWidth, s.dest, s.summary)
-		for _, l := range s.lines {
-			fmt.Fprintf(w, "  %s\n", l)
+	return 0, false
+}
+
+func describePlan(s plan.SetState, actions []plan.Action, linked []string, verbose bool) (string, []group) {
+	items := map[statusKind][]string{}
+	for _, a := range actions {
+		k, ok := statusKindOf(s, a)
+		if !ok {
+			continue
+		}
+		item := a.Path
+		switch k {
+		case kindConflict:
+			item += "  (" + describeConflict(a) + ")"
+		case kindTied:
+			item += "  (" + strings.Join(a.Tied, ", ") + ")"
+		}
+		items[k] = append(items[k], item)
+	}
+	if verbose {
+		items[kindLinked] = linked
+	}
+
+	var groups []group
+	problems := 0
+	for k := kindConflict; k <= kindLinked; k++ {
+		if len(items[k]) == 0 {
+			continue
+		}
+		groups = append(groups, group{heading: k.heading(s.Name), tone: k.tone(), items: items[k]})
+		if k != kindLinked {
+			problems++
+		}
+	}
+	summary := fmt.Sprintf("%d linked", len(linked))
+	if problems == 0 {
+		summary += ", in sync"
+	}
+	return summary, groups
+}
+
+func printStatus(w io.Writer, sets []*setStatus, color bool) {
+	for i, s := range sets {
+		if i > 0 {
+			fmt.Fprintln(w)
+		}
+		head := paint(color, toneBold, s.name)
+		if s.dest != "" {
+			head += " → " + s.dest
+		}
+		fmt.Fprintf(w, "%s   %s\n", head, s.summary)
+		for _, g := range s.groups {
+			fmt.Fprintf(w, "  %s\n", paint(color, g.tone, g.heading))
+			for _, item := range g.items {
+				fmt.Fprintf(w, "    %s\n", item)
+			}
 		}
 	}
 }

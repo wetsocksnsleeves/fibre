@@ -21,18 +21,15 @@ func TestStatusInsideDestShowsThatSet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("status in %s: %v\n%s", dir, err, out)
 		}
-		lines := strings.Split(strings.TrimSpace(out), "\n")
 		wantSet := filepath.Base(dir)
 		if wantSet == "agents" {
 			wantSet = "claude"
 		}
-		if !strings.HasPrefix(lines[0], wantSet+" ") {
-			t.Errorf("status in %s starts with %q, want the %s set", dir, lines[0], wantSet)
+		if !strings.HasPrefix(out, wantSet+" → ") {
+			t.Errorf("status in %s = %q, want the %s set first", dir, out, wantSet)
 		}
-		for _, l := range lines[1:] {
-			if !strings.HasPrefix(l, "  ") && !strings.HasPrefix(l, "watcher:") {
-				t.Errorf("status in %s shows another set: %q", dir, l)
-			}
+		if n := strings.Count(out, " → "); n != 1 {
+			t.Errorf("status in %s shows %d sets, want 1:\n%s", dir, n, out)
 		}
 	}
 }
@@ -54,7 +51,7 @@ func TestStatusInsideDestNamedSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status rofi: %v\n%s", err, out)
 	}
-	if !strings.HasPrefix(out, "rofi ") {
+	if !strings.HasPrefix(out, "rofi → ") {
 		t.Errorf("status rofi = %q", out)
 	}
 }
@@ -99,7 +96,7 @@ func TestStatusUnderHomeDestShowsAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "nvim ") || !strings.Contains(out, "zsh ") {
+	if !strings.Contains(out, "nvim → ") || !strings.Contains(out, "zsh → ") {
 		t.Errorf("status under home should show every set:\n%s", out)
 	}
 }

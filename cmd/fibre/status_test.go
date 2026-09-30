@@ -107,7 +107,7 @@ func TestStatusOneSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status nvim: %v\n%s", err, out)
 	}
-	want := "nvim  ~/.config/nvim  1 linked  ok\nwatcher: not running\n"
+	want := "nvim → ~/.config/nvim   1 linked, in sync\n\nWatcher is not running, so nothing is synced automatically.\n"
 	if out != want {
 		t.Errorf("status nvim = %q, want %q", out, want)
 	}
@@ -119,7 +119,7 @@ func TestStatusOneSetStillSeesOtherSetsForOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status rofi: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "UNTRACKED  bin/myscript  (claimed by rofi and tools)") {
+	if !strings.Contains(out, "    bin/myscript  (rofi, tools)") {
 		t.Errorf("status rofi does not report the tie:\n%s", out)
 	}
 }
@@ -165,5 +165,24 @@ func TestStatusReportsChangedDest(t *testing.T) {
 	}
 	if !strings.Contains(out, "unlink and link again") {
 		t.Errorf("status does not report the changed dest:\n%s", out)
+	}
+}
+
+func TestPaint(t *testing.T) {
+	if got := paint(false, toneBad, "x"); got != "x" {
+		t.Errorf("paint without color = %q", got)
+	}
+	if got := paint(true, toneBad, "x"); got != "\x1b[31mx\x1b[0m" {
+		t.Errorf("paint with color = %q", got)
+	}
+}
+
+func TestUseColorOffForNonTerminals(t *testing.T) {
+	if useColor(&strings.Builder{}) {
+		t.Error("useColor = true for a non-file writer")
+	}
+	t.Setenv("NO_COLOR", "1")
+	if useColor(os.Stdout) {
+		t.Error("useColor = true with NO_COLOR set")
 	}
 }
