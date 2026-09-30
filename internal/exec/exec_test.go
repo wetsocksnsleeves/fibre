@@ -101,6 +101,75 @@ func TestApplyAdoptCreatesSetParents(t *testing.T) {
 	assertLink(t, filepath.Join(dest, "a", "b", "c"), filepath.Join(setDir, "a", "b", "c"))
 }
 
+func TestApplyReplaceWithCopy(t *testing.T) {
+	setDir, dest := dirs(t)
+	write(t, filepath.Join(setDir, "bin", "tool"), "#!/bin/sh")
+	if err := os.Chmod(filepath.Join(setDir, "bin", "tool"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dest, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(setDir, "bin", "tool"), filepath.Join(dest, "bin", "tool")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpReplaceWithCopy, Path: "bin/tool"}}); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Lstat(filepath.Join(dest, "bin", "tool"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !info.Mode().IsRegular() {
+		t.Fatalf("dest/bin/tool is a %v, want a regular file", info.Mode().Type())
+	}
+	if info.Mode().Perm() != 0o755 {
+		t.Errorf("mode = %v, want 0755", info.Mode().Perm())
+	}
+	if got := read(t, filepath.Join(dest, "bin", "tool")); got != "#!/bin/sh" {
+		t.Errorf("copy = %q", got)
+	}
+	if got := read(t, filepath.Join(setDir, "bin", "tool")); got != "#!/bin/sh" {
+		t.Errorf("set file changed: %q", got)
+	}
+}
+
+func TestApplyReplaceWithCopyOfSetSymlink(t *testing.T) {
+	setDir, dest := dirs(t)
+	if err := os.MkdirAll(setDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("/usr/bin/env", filepath.Join(setDir, "env")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(setDir, "env"), filepath.Join(dest, "env")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpReplaceWithCopy, Path: "env"}}); err != nil {
+		t.Fatal(err)
+	}
+	assertLink(t, filepath.Join(dest, "env"), "/usr/bin/env")
+}
+
+func TestApplyRemoveLink(t *testing.T) {
+	setDir, dest := dirs(t)
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(setDir, "gone"), filepath.Join(dest, "gone")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpRemoveLink, Path: "gone"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(filepath.Join(dest, "gone")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("link not removed: %v", err)
+	}
+}
+
 func TestApplyBackupThenLink(t *testing.T) {
 	setDir, dest := dirs(t)
 	write(t, filepath.Join(setDir, "a"), "set")

@@ -34,7 +34,7 @@ type Result struct {
 	Backups []Backup
 }
 
-// Apply runs a link plan for the set in setDir and dest, in order. A plan
+// Apply runs a plan for the set in setDir and dest, in order. A plan
 // with conflicts is refused before anything is touched. If an action fails,
 // Apply stops and returns the error; earlier actions are not undone.
 func Apply(setDir, dest string, actions []plan.Action) (Result, error) {
@@ -65,6 +65,10 @@ func Apply(setDir, dest string, actions []plan.Action) (Result, error) {
 			if err == nil {
 				res.Backups = append(res.Backups, Backup{Path: a.Path, To: to})
 			}
+		case plan.OpReplaceWithCopy:
+			err = replaceWithCopy(setPath, destPath)
+		case plan.OpRemoveLink:
+			err = os.Remove(destPath)
 		default:
 			err = fmt.Errorf("unknown op %v", a.Op)
 		}
@@ -80,6 +84,35 @@ func Apply(setDir, dest string, actions []plan.Action) (Result, error) {
 func replaceWithLink(setPath, destPath string) error {
 	tmp := destPath + ".fibre-tmp"
 	if err := os.Symlink(setPath, tmp); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, destPath); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+// replaceWithCopy swaps the symlink at destPath for a copy of setPath in one
+// rename, so destPath is never missing. A set file that is itself a symlink
+// is copied as a symlink with the same target.
+func replaceWithCopy(setPath, destPath string) error {
+	tmp := destPath + ".fibre-tmp"
+	info, err := os.Lstat(setPath)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&fs.ModeSymlink != 0 {
+		target, err := os.Readlink(setPath)
+		if err != nil {
+			return err
+		}
+		err = os.Symlink(target, tmp)
+	} else {
+		err = copyFile(setPath, tmp)
+	}
+	if err != nil {
+		os.Remove(tmp)
 		return err
 	}
 	if err := os.Rename(tmp, destPath); err != nil {
@@ -144,6 +177,11 @@ func copyFile(from, to string) error {
 		return err
 	}
 	if _, err := io.Copy(dst, src); err != nil {
+		dst.Close()
+		return err
+	}
+	// OpenFile's mode is filtered by the umask; match the source exactly.
+	if err := dst.Chmod(info.Mode().Perm()); err != nil {
 		dst.Close()
 		return err
 	}
