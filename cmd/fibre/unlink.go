@@ -17,7 +17,10 @@ func newUnlinkCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "unlink <set>",
 		Short: "Replace a set's links in its dest with copies of its files",
-		Args:  cobra.ExactArgs(1),
+		Long: `Replace a set's links in its dest with copies of its files, and stop
+tracking the set on this machine. unlink works inside the dotfiles root and
+inside any linked set's dest.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUnlink(cmd.OutOrStdout(), args[0])
 		},
@@ -25,14 +28,14 @@ func newUnlinkCmd() *cobra.Command {
 }
 
 func runUnlink(stdout io.Writer, name string) error {
-	rootDir, err := findRoot()
-	if err != nil {
-		return err
-	}
 	if err := validateSetName(name); err != nil {
 		return err
 	}
 	return withState(func(stateDir string, st *state.State) error {
+		rootDir, _, err := locate(st)
+		if err != nil {
+			return err
+		}
 		if st.Root != "" && st.Root != rootDir {
 			return fmt.Errorf("this machine's sets are linked from %s, not this root", displayPath(st.Root))
 		}

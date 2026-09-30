@@ -19,20 +19,28 @@ import (
 )
 
 func newStatusCmd() *cobra.Command {
-	var verbose bool
+	var verbose, all bool
 	cmd := &cobra.Command{
 		Use:   "status [set]",
 		Short: "Show each set's links and the paths that need attention",
-		Args:  cobra.MaximumNArgs(1),
+		Long: `Show each set's links and the paths that need attention.
+
+status works inside the dotfiles root and inside any linked set's dest. In a
+dest it shows only that set; pass --all to show every set.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			only := ""
 			if len(args) == 1 {
+				if all {
+					return errors.New("--all cannot be combined with a set name")
+				}
 				only = args[0]
 			}
-			return runStatus(cmd.OutOrStdout(), only, verbose)
+			return runStatus(cmd.OutOrStdout(), only, all, verbose)
 		},
 	}
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "list every link")
+	cmd.Flags().BoolVarP(&all, "all", "a", false, "show every set, even inside a set's dest")
 	return cmd
 }
 
@@ -43,11 +51,7 @@ type setStatus struct {
 	lines      []string
 }
 
-func runStatus(w io.Writer, only string, verbose bool) error {
-	rootDir, err := findRoot()
-	if err != nil {
-		return err
-	}
+func runStatus(w io.Writer, only string, all, verbose bool) error {
 	if only != "" {
 		if err := validateSetName(only); err != nil {
 			return err
@@ -60,6 +64,13 @@ func runStatus(w io.Writer, only string, verbose bool) error {
 	st, err := state.Load(stateDir)
 	if err != nil {
 		return err
+	}
+	rootDir, inSet, err := locate(st)
+	if err != nil {
+		return err
+	}
+	if only == "" && !all {
+		only = inSet
 	}
 	if st.Root != "" && st.Root != rootDir && len(st.Linked) > 0 {
 		return fmt.Errorf("this machine's sets are linked from %s, not this root", displayPath(st.Root))
