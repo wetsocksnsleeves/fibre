@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -13,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
 	"github.com/wetsocksnsleeves/fibre/internal/plan"
 	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/fibre/internal/workspace"
 )
 
 func newStatusCmd() *cobra.Command {
@@ -104,33 +103,37 @@ func runStatus(w io.Writer, only string, all, verbose, color bool) error {
 
 	// Reconcile every linked set together, since which set owns an
 	// untracked file depends on all of them.
+	ig := workspace.Ignored{Root: rootDir, StateDir: stateDir}
+	linkedSets := map[string]workspace.Set{}
+	for _, ws := range workspace.Load(st, env) {
+		linkedSets[ws.Name] = ws
+	}
 	statuses := map[string]*setStatus{}
 	var states []plan.SetState
 	for _, name := range names {
-		setDir := filepath.Join(rootDir, name)
-		linked := st.Linked[name]
-		cfg, cfgErr := config.Load(setDir, env)
 		ss := &setStatus{name: name}
 		statuses[name] = ss
-		switch {
-		case linked == nil && cfgErr != nil:
-			ss.summary = "error: " + cfgErr.Error()
-		case linked == nil:
-			ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `fibre link %s`)", name)
-		case cfgErr != nil:
-			ss.dest, ss.summary = displayPath(linked.Dest), "error: "+cfgErr.Error()
-		case cfg.Dest != linked.Dest:
-			ss.dest = displayPath(linked.Dest)
-			ss.summary = fmt.Sprintf("error: fibre.yaml now says dest %s; unlink and link again", displayPath(cfg.Dest))
-		default:
-			ss.dest = displayPath(linked.Dest)
-			s, err := reconcileSnapshot(name, setDir, cfg, linked.Links, rootDir, stateDir)
+		ws, linked := linkedSets[name]
+		if !linked {
+			cfg, err := config.Load(filepath.Join(rootDir, name), env)
 			if err != nil {
 				ss.summary = "error: " + err.Error()
-				continue
+			} else {
+				ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `fibre link %s`)", name)
 			}
-			states = append(states, s)
+			continue
 		}
+		ss.dest = displayPath(st.Linked[name].Dest)
+		if ws.Err != nil {
+			ss.summary = "error: " + ws.Err.Error()
+			continue
+		}
+		s, err := ws.Snapshot(ig)
+		if err != nil {
+			ss.summary = "error: " + err.Error()
+			continue
+		}
+		states = append(states, s)
 	}
 
 	for i, p := range plan.Reconcile(states) {
@@ -148,49 +151,8 @@ func runStatus(w io.Writer, only string, all, verbose, color bool) error {
 	}
 	printStatus(w, shown, color)
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Watcher is not running, so nothing is synced automatically.")
+	fmt.Fprintln(w, watcherLine(stateDir))
 	return nil
-}
-
-// reconcileSnapshot reads a linked set and its dest for Reconcile. A strict
-// set only needs its own paths in dest; any other set also needs every file
-// in dest, to find untracked ones. Only paths the set maps to are hashed.
-func reconcileSnapshot(name, setDir string, cfg *config.Config, links []string, rootDir, stateDir string) (plan.SetState, error) {
-	set, err := fsnap.Scan(setDir, cfg.Excluded)
-	if err != nil {
-		return plan.SetState{}, err
-	}
-	paths := sortedKeys(set)
-	for _, l := range links {
-		if _, ok := set[l]; !ok {
-			paths = append(paths, l)
-		}
-	}
-	destTree := fsnap.Tree{}
-	if !cfg.Strict {
-		if _, err := os.Lstat(cfg.Dest); err == nil {
-			destTree, err = fsnap.ScanKinds(cfg.Dest, func(rel string) bool {
-				p := filepath.Join(cfg.Dest, filepath.FromSlash(rel))
-				return cfg.Excluded(rel) || p == rootDir || p == stateDir
-			})
-			if err != nil {
-				return plan.SetState{}, err
-			}
-		} else if !errors.Is(err, fs.ErrNotExist) {
-			return plan.SetState{}, err
-		}
-	}
-	hashed, err := fsnap.Lookup(cfg.Dest, paths)
-	if err != nil {
-		return plan.SetState{}, err
-	}
-	for rel, e := range hashed {
-		destTree[rel] = e
-	}
-	return plan.SetState{
-		Name: name, SetDir: setDir, Dest: cfg.Dest,
-		Set: set, DestTree: destTree, Excluded: cfg.Excluded, Strict: cfg.Strict, Links: links,
-	}, nil
 }
 
 // statusKind is one heading in a set's block. Kinds are listed in this

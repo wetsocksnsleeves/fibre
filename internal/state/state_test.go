@@ -96,19 +96,70 @@ func TestDefaultDirFallsBackToHome(t *testing.T) {
 
 func TestLockIsExclusive(t *testing.T) {
 	dir := t.TempDir()
-	l, err := Acquire(dir)
+	l, err := TryAcquire(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Acquire(dir); !errors.Is(err, ErrLocked) {
-		t.Errorf("second Acquire err = %v, want ErrLocked", err)
+	if _, err := TryAcquire(dir); !errors.Is(err, ErrLocked) {
+		t.Errorf("second TryAcquire err = %v, want ErrLocked", err)
 	}
 	if err := l.Release(); err != nil {
 		t.Fatal(err)
 	}
-	l2, err := Acquire(dir)
+	l2, err := TryAcquire(dir)
 	if err != nil {
-		t.Fatalf("Acquire after Release: %v", err)
+		t.Fatalf("TryAcquire after Release: %v", err)
 	}
 	l2.Release()
+}
+
+func TestAcquireWaitsForRelease(t *testing.T) {
+	dir := t.TempDir()
+	l, err := TryAcquire(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		l.Release()
+	}()
+	l2, err := Acquire(dir, 5*time.Second)
+	if err != nil {
+		t.Fatalf("Acquire: %v", err)
+	}
+	l2.Release()
+}
+
+func TestAcquireGivesUp(t *testing.T) {
+	dir := t.TempDir()
+	l, err := TryAcquire(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Release()
+	if _, err := Acquire(dir, 100*time.Millisecond); !errors.Is(err, ErrLocked) {
+		t.Errorf("err = %v, want ErrLocked", err)
+	}
+}
+
+func TestWatcherLock(t *testing.T) {
+	dir := t.TempDir()
+	if _, running, err := WatcherPID(dir); err != nil || running {
+		t.Fatalf("WatcherPID before start = %v, %v", running, err)
+	}
+	l, err := AcquireWatcher(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pid, running, err := WatcherPID(dir)
+	if err != nil || !running || pid != os.Getpid() {
+		t.Errorf("WatcherPID = %d, %v, %v; want %d, true", pid, running, err, os.Getpid())
+	}
+	if _, err := AcquireWatcher(dir); !errors.Is(err, ErrWatcherRunning) {
+		t.Errorf("second AcquireWatcher err = %v", err)
+	}
+	l.Release()
+	if _, running, _ := WatcherPID(dir); running {
+		t.Error("WatcherPID reports running after release")
+	}
 }

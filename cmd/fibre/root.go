@@ -11,6 +11,6 @@ func newRootCmd(version string) *cobra.Command {
 		Version:      version,
 		SilenceUsage: true,
 	}
-	cmd.AddCommand(newInitCmd(), newLinkCmd(), newUnlinkCmd(), newStatusCmd())
+	cmd.AddCommand(newInitCmd(), newLinkCmd(), newUnlinkCmd(), newStatusCmd(), newWatchCmd())
 	return cmd
 }

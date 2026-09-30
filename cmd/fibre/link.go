@@ -66,13 +66,17 @@ func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
 	})
 }
 
+// lockWait is how long a command waits for the state lock, which the
+// watcher holds briefly while it applies a change.
+var lockWait = 3 * time.Second
+
 // withState holds the state lock while fn runs on the loaded state.
 func withState(fn func(stateDir string, st *state.State) error) error {
 	stateDir, err := state.DefaultDir()
 	if err != nil {
 		return err
 	}
-	lock, err := state.Acquire(stateDir)
+	lock, err := state.Acquire(stateDir, lockWait)
 	if err != nil {
 		return err
 	}

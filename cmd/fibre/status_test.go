@@ -107,7 +107,7 @@ func TestStatusOneSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status nvim: %v\n%s", err, out)
 	}
-	want := "nvim → ~/.config/nvim   1 linked, in sync\n\nWatcher is not running, so nothing is synced automatically.\n"
+	want := "nvim → ~/.config/nvim   1 linked, in sync\n\nWatcher is not running, so nothing is synced automatically. Start it with `fibre watch run`.\n"
 	if out != want {
 		t.Errorf("status nvim = %q, want %q", out, want)
 	}
