@@ -49,7 +49,7 @@ and linked back. Excluded files stay in dest.`,
 		},
 	}
 	cmd.Flags().StringVar(&dest, "dest", "", "directory the set is linked into (~ and $VARS are kept as written in fibre.yaml)")
-	cmd.Flags().StringArrayVar(&exclude, "exclude", nil, "glob to exclude, relative to the set; repeatable")
+	cmd.Flags().StringSliceVar(&exclude, "exclude", nil, "comma-separated globs to exclude, relative to the set")
 	cmd.Flags().BoolVar(&strict, "strict", false, "make the set link-only: never import or adopt files from dest")
 	return cmd
 }

@@ -121,7 +121,7 @@ func TestInitSetImportsDest(t *testing.T) {
 	writeFile(t, filepath.Join(dest, "history.jsonl"), "history")
 	writeFile(t, filepath.Join(dest, "projects", "p", "log.json"), "log")
 
-	out, err := run(t, "init", "claude", "--dest", dest, "--exclude", "history.jsonl", "--exclude", "projects/**")
+	out, err := run(t, "init", "claude", "--dest", dest, "--exclude", "history.jsonl,projects/**")
 	if err != nil {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
@@ -148,7 +148,7 @@ func TestInitSetLeavesExcludedFilesInDest(t *testing.T) {
 	writeFile(t, filepath.Join(dest, "settings.json"), "{}")
 	writeFile(t, filepath.Join(dest, "history.jsonl"), "history")
 	writeFile(t, filepath.Join(dest, "projects", "p", "log.json"), "log")
-	if out, err := run(t, "init", "claude", "--dest", dest, "--exclude", "history.jsonl", "--exclude", "projects/**"); err != nil {
+	if out, err := run(t, "init", "claude", "--dest", dest, "--exclude", "history.jsonl,projects/**"); err != nil {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 	setDir := filepath.Join(e.root, "claude")
