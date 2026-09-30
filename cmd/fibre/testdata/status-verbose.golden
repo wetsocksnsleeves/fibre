@@ -1,0 +1,19 @@
+claude  ~/.claude       2 linked  1 conflict  1 unlinked  1 modified  1 deleted  1 dangling  1 untracked
+  UNTRACKED  agents/draft.md
+  LINKED     agents/reviewer.md
+  UNLINKED   commands/new.md  (in the set, not linked yet)
+  CONFLICT   conflict.json  (dest file differs from the set's)
+  DANGLING   gone.md  (set file deleted)
+  MODIFIED   keybindings.json  (link replaced by a real file)
+  DELETED    notes.md  (link removed from dest)
+  LINKED     settings.json
+nvim    ~/.config/nvim  1 linked  ok
+  LINKED     init.lua
+rofi    ~/.local        1 linked  1 untracked
+  UNTRACKED  bin/myscript  (claimed by rofi and tools)
+  LINKED     bin/rofi-run
+tools   ~/.local        1 linked  1 untracked
+  UNTRACKED  bin/myscript  (claimed by rofi and tools)
+  LINKED     bin/tool
+zsh     ~               not linked
+watcher: not running

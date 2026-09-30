@@ -110,10 +110,11 @@ func destString(n yaml.Node) (string, error) {
 // Excluded reports whether rel, a slash-separated path relative to the set or
 // dest, is excluded. A path is excluded if it or any of its parent
 // directories matches a pattern, so excluding a directory excludes its
-// contents. The set's own FileName is always excluded.
+// contents. The set's own FileName and the backup and temp files fibre
+// creates (*.fibre-bak, *.fibre-bak.N, *.fibre-tmp) are always excluded.
 func (c *Config) Excluded(rel string) bool {
 	rel = path.Clean(rel)
-	if rel == FileName {
+	if rel == FileName || isFibreFile(path.Base(rel)) {
 		return true
 	}
 	for p := rel; p != "." && p != "/"; p = path.Dir(p) {
@@ -125,6 +126,18 @@ func (c *Config) Excluded(rel string) bool {
 		}
 	}
 	return false
+}
+
+func isFibreFile(base string) bool {
+	if strings.HasSuffix(base, ".fibre-tmp") || strings.HasSuffix(base, ".fibre-bak") {
+		return true
+	}
+	i := strings.LastIndex(base, ".fibre-bak.")
+	if i < 0 {
+		return false
+	}
+	n := base[i+len(".fibre-bak."):]
+	return n != "" && strings.Trim(n, "0123456789") == ""
 }
 
 func validatePattern(p string) error {

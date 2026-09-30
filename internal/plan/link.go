@@ -35,6 +35,12 @@ const (
 	OpReplaceWithCopy
 	// OpRemoveLink removes a symlink in dest whose set file is gone.
 	OpRemoveLink
+	// OpDeleteSetFile deletes the set's file because the user deleted its
+	// link from dest.
+	OpDeleteSetFile
+	// OpUntracked reports a real file in dest that several sets could adopt
+	// (see Tied). It is left in place.
+	OpUntracked
 )
 
 func (o Op) String() string {
@@ -55,6 +61,10 @@ func (o Op) String() string {
 		return "replace-with-copy"
 	case OpRemoveLink:
 		return "remove-link"
+	case OpDeleteSetFile:
+		return "delete-set-file"
+	case OpUntracked:
+		return "untracked"
 	}
 	return "unknown"
 }
@@ -72,6 +82,8 @@ type Action struct {
 	// Want is what the set needs at Path (fsnap.File or fsnap.Dir), for
 	// OpConflict.
 	Want fsnap.Kind
+	// Tied names the sets that could each adopt Path, for OpUntracked.
+	Tied []string
 }
 
 // LinkInput is everything Link needs to plan linking one set.
