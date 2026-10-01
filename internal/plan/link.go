@@ -30,6 +30,11 @@ const (
 	OpBackup
 	// OpConflict means Path cannot be linked without losing what is in dest.
 	OpConflict
+	// OpReplaceWithCopy replaces a symlink in dest with a copy of the set
+	// file it points to.
+	OpReplaceWithCopy
+	// OpRemoveLink removes a symlink in dest whose set file is gone.
+	OpRemoveLink
 )
 
 func (o Op) String() string {
@@ -46,6 +51,10 @@ func (o Op) String() string {
 		return "backup"
 	case OpConflict:
 		return "conflict"
+	case OpReplaceWithCopy:
+		return "replace-with-copy"
+	case OpRemoveLink:
+		return "remove-link"
 	}
 	return "unknown"
 }
