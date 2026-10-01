@@ -11,16 +11,25 @@ claude → ~/.claude   2 linked
     gone.md
   Untracked (new in dest; the watcher will adopt them):
     agents/draft.md
+  Linked:
+    agents/reviewer.md
+    settings.json
 
 nvim → ~/.config/nvim   1 linked, in sync
+  Linked:
+    init.lua
 
 rofi → ~/.local   1 linked
   Untracked, claimed by more than one set (exclude it from all but one):
     bin/myscript  (rofi, tools)
+  Linked:
+    bin/rofi-run
 
 tools → ~/.local   1 linked
   Untracked, claimed by more than one set (exclude it from all but one):
     bin/myscript  (rofi, tools)
+  Linked:
+    bin/tool
 
 zsh → ~   not linked (run `fibre link zsh`)
 

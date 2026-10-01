@@ -102,18 +102,42 @@ in the foreground instead.
 fibre status
 ```
 
-Prints one line per set, then any paths that need attention: conflicts, files
-the watcher hasn't processed yet, and untracked files. The last line says
-whether the watcher is running. Pass a set name to show only that set, and
-`-v` to list every link.
+Prints one line per set with whether it is in sync, linked sets first. The
+last line says whether the watcher is running. Pass a set name to show only
+that set.
+
+```
+Linked:
+  claude → ~/.claude       not synced
+  nvim   → ~/.config/nvim  synced
+Not linked (run `fibre link <set>`):
+  zsh    → ~
+Run `fibre status -v` to see what needs attention.
+```
+
+`-v` lists the paths that need attention in each set: conflicts, files the
+watcher hasn't processed yet, and untracked files. `-vv` also lists every
+link.
 
 ```
 claude → ~/.claude   2 linked
   Untracked (new in dest; the watcher will adopt them):
     agents/draft.md
-
-nvim → ~/.config/nvim   1 linked, in sync
 ```
+
+## Exclude files
+
+```sh
+cd ~/.claude
+fibre exclude history.jsonl,todos/,'projects/**'
+```
+
+Adds each path to the exclude list in the set's `fibre.yaml`. Run it inside a
+set or inside a linked set's dest, or pass `--set <name>` from anywhere in the
+root. Paths are relative to the working directory, can be globs, and can be
+separated by commas or spaces. A path that is already linked is replaced with
+a copy of its file: it keeps its contents but no longer syncs. The set's copy
+stays in the repo for you to delete.
 
 ## Stop managing a set
 

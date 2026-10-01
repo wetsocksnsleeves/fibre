@@ -177,3 +177,71 @@ func expand(s string, env Env) (string, error) {
 	}
 	return out, nil
 }
+
+// AddExcludes returns data, a fibre.yaml, with patterns appended to its
+// exclude list, and the patterns that were not already in it. Other keys and
+// comments are kept. Each pattern is validated.
+func AddExcludes(data []byte, patterns []string) ([]byte, []string, error) {
+	for _, p := range patterns {
+		if err := validatePattern(p); err != nil {
+			return nil, nil, fmt.Errorf("exclude %q: %w", p, err)
+		}
+	}
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, nil, err
+	}
+	if doc.Kind == 0 {
+		doc = yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{{Kind: yaml.MappingNode, Tag: "!!map"}}}
+	}
+	top := doc.Content[0]
+	if top.Kind != yaml.MappingNode {
+		return nil, nil, errors.New("fibre.yaml is not a mapping")
+	}
+
+	var list *yaml.Node
+	for i := 0; i+1 < len(top.Content); i += 2 {
+		if top.Content[i].Value == "exclude" {
+			list = top.Content[i+1]
+		}
+	}
+	switch {
+	case list == nil:
+		list = &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+		top.Content = append(top.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "exclude"}, list)
+	case list.Kind == yaml.ScalarNode && list.Tag == "!!null":
+		*list = yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+	case list.Kind != yaml.SequenceNode:
+		return nil, nil, fmt.Errorf("line %d: exclude must be a list", list.Line)
+	}
+	// A flow list ([a, b]) written by hand becomes a block list once it grows.
+	list.Style = 0
+
+	have := map[string]bool{}
+	for _, n := range list.Content {
+		have[n.Value] = true
+	}
+	var added []string
+	for _, p := range patterns {
+		if have[p] {
+			continue
+		}
+		have[p] = true
+		added = append(added, p)
+		list.Content = append(list.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: p})
+	}
+	if len(added) == 0 {
+		return data, nil, nil
+	}
+
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(&doc); err != nil {
+		return nil, nil, err
+	}
+	if err := enc.Close(); err != nil {
+		return nil, nil, err
+	}
+	return buf.Bytes(), added, nil
+}

@@ -25,7 +25,7 @@ func TestStatusInsideDestShowsThatSet(t *testing.T) {
 		if wantSet == "agents" {
 			wantSet = "claude"
 		}
-		if !strings.HasPrefix(out, wantSet+" → ") {
+		if !strings.HasPrefix(out, "Linked:\n  "+wantSet+" → ") {
 			t.Errorf("status in %s = %q, want the %s set first", dir, out, wantSet)
 		}
 		if n := strings.Count(out, " → "); n != 1 {
@@ -51,7 +51,7 @@ func TestStatusInsideDestNamedSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status rofi: %v\n%s", err, out)
 	}
-	if !strings.HasPrefix(out, "rofi → ") {
+	if !strings.HasPrefix(out, "Linked:\n  rofi → ") {
 		t.Errorf("status rofi = %q", out)
 	}
 }
@@ -96,7 +96,7 @@ func TestStatusUnderHomeDestShowsAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "nvim → ") || !strings.Contains(out, "zsh → ") {
+	if !strings.Contains(out, "  nvim → ") || !strings.Contains(out, "  zsh  → ") {
 		t.Errorf("status under home should show every set:\n%s", out)
 	}
 }
