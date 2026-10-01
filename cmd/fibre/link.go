@@ -40,19 +40,34 @@ func newLinkCmd() *cobra.Command {
 			return runLink(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], r)
 		},
 	}
-	cmd.Flags().BoolVar(&adopt, "adopt", false, "move conflicting dest files into the set, then link")
-	cmd.Flags().BoolVar(&force, "force", false, "back up conflicting dest paths, then link the set's version")
-	cmd.Flags().BoolVar(&skip, "skip", false, "leave conflicting paths alone and link everything else")
+	cmd.Flags().BoolVarP(&adopt, "adopt", "a", false, "move conflicting dest files into the set, then link")
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "back up conflicting dest paths, then link the set's version")
+	cmd.Flags().BoolVarP(&skip, "skip", "s", false, "leave conflicting paths alone and link everything else")
 	cmd.MarkFlagsMutuallyExclusive("adopt", "force", "skip")
 	return cmd
 }
 
 func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
-	rootDir, setDir, cfg, err := loadSet(name)
+	rootDir, err := findRoot()
 	if err != nil {
 		return err
 	}
+	setDir, cfg, err := loadSet(rootDir, name)
+	if err != nil {
+		return err
+	}
+	return withState(func(stateDir string, st *state.State) error {
+		out, err := linkSet(stderr, stateDir, st, rootDir, name, setDir, cfg, r)
+		if err != nil {
+			return err
+		}
+		printLinkSummary(stdout, name, cfg.Dest, out)
+		return nil
+	})
+}
 
+// withState holds the state lock while fn runs on the loaded state.
+func withState(fn func(stateDir string, st *state.State) error) error {
 	stateDir, err := state.DefaultDir()
 	if err != nil {
 		return err
@@ -62,22 +77,30 @@ func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
 		return err
 	}
 	defer lock.Release()
-
 	st, err := state.Load(stateDir)
 	if err != nil {
 		return err
 	}
-	if st.Root != "" && st.Root != rootDir && len(st.Linked) > 0 {
-		return fmt.Errorf("this machine has sets linked from %s; fibre manages one root per machine", st.Root)
+	return fn(stateDir, st)
+}
+
+// linkOutcome is what a link run did, for the summary.
+type linkOutcome struct {
+	actions []plan.Action
+	result  exec.Result
+	links   int
+}
+
+// linkSet links a set and records it in state. The caller holds the lock.
+func linkSet(stderr io.Writer, stateDir string, st *state.State, rootDir, name, setDir string, cfg *config.Config, r plan.Resolution) (linkOutcome, error) {
+	if err := checkState(st, rootDir, name, cfg); err != nil {
+		return linkOutcome{}, err
 	}
 	prev := st.Linked[name]
-	if prev != nil && prev.Dest != cfg.Dest {
-		return fmt.Errorf("%s is linked into %s but its fibre.yaml now says %s; unlink it first", name, displayPath(prev.Dest), displayPath(cfg.Dest))
-	}
 
 	in, err := snapshot(setDir, cfg)
 	if err != nil {
-		return err
+		return linkOutcome{}, err
 	}
 
 	var others []plan.Claim
@@ -91,7 +114,7 @@ func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
 		for _, c := range sc {
 			fmt.Fprintf(stderr, "  %s  (linked by %s)\n", c.Path, c.OtherSet)
 		}
-		return fmt.Errorf("%s conflict with other sets", plural(len(sc), "path"))
+		return linkOutcome{}, fmt.Errorf("%s conflict with other sets", plural(len(sc), "path"))
 	}
 
 	actions := plan.Resolve(plan.Link(in), r)
@@ -99,15 +122,15 @@ func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
 	var ce *exec.ConflictError
 	if errors.As(err, &ce) {
 		printConflicts(stderr, name, ce.Conflicts, r)
-		return fmt.Errorf("%s in %s; nothing was changed", plural(len(ce.Conflicts), "conflict"), name)
+		return linkOutcome{}, fmt.Errorf("%s in %s; nothing was changed", plural(len(ce.Conflicts), "conflict"), name)
 	}
 	if err != nil {
-		return err
+		return linkOutcome{}, err
 	}
 
 	after, err := fsnap.Lookup(cfg.Dest, sortedKeys(in.Set))
 	if err != nil {
-		return err
+		return linkOutcome{}, err
 	}
 	in.DestTree = after
 	links := plan.Linked(in)
@@ -119,44 +142,63 @@ func runLink(stdout, stderr io.Writer, name string, r plan.Resolution) error {
 	st.Root = rootDir
 	st.Linked[name] = &state.Set{Dest: cfg.Dest, LinkedAt: linkedAt, Links: links}
 	if err := state.Save(stateDir, st); err != nil {
-		return err
+		return linkOutcome{}, err
 	}
+	return linkOutcome{actions: actions, result: res, links: len(links)}, nil
+}
 
-	printLinkSummary(stdout, name, cfg.Dest, actions, res, len(links))
+// checkState refuses to link a set from a second root, or into a different
+// dest than the one it is linked into.
+func checkState(st *state.State, rootDir, name string, cfg *config.Config) error {
+	if st.Root != "" && st.Root != rootDir && len(st.Linked) > 0 {
+		return fmt.Errorf("this machine has sets linked from %s; fibre manages one root per machine", st.Root)
+	}
+	if prev := st.Linked[name]; prev != nil && prev.Dest != cfg.Dest {
+		return fmt.Errorf("%s is linked into %s but its fibre.yaml now says %s; unlink it first", name, displayPath(prev.Dest), displayPath(cfg.Dest))
+	}
 	return nil
 }
 
-// loadSet finds the root from the working directory and loads the named set.
-func loadSet(name string) (rootDir, setDir string, cfg *config.Config, err error) {
-	if name == "" || name != filepath.Base(name) || strings.HasPrefix(name, ".") {
-		return "", "", nil, fmt.Errorf("invalid set name %q: use the name of a directory in the root", name)
-	}
+// findRoot finds the root from the working directory. Symlink targets and
+// state use the resolved path, so the same root reached through a symlinked
+// path is recognized as the same root.
+func findRoot() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return "", "", nil, err
+		return "", err
 	}
-	rootDir, err = root.Find(wd)
+	rootDir, err := root.Find(wd)
 	if err != nil {
-		return "", "", nil, err
+		return "", err
 	}
-	// Symlink targets and state use the resolved path, so the same root
-	// reached through a symlinked path is recognized as the same root.
-	if rootDir, err = filepath.EvalSymlinks(rootDir); err != nil {
-		return "", "", nil, err
+	return filepath.EvalSymlinks(rootDir)
+}
+
+func validateSetName(name string) error {
+	if name == "" || name != filepath.Base(name) || strings.HasPrefix(name, ".") {
+		return fmt.Errorf("invalid set name %q: use the name of a directory in the root", name)
+	}
+	return nil
+}
+
+// loadSet loads the config of the named set in rootDir.
+func loadSet(rootDir, name string) (setDir string, cfg *config.Config, err error) {
+	if err := validateSetName(name); err != nil {
+		return "", nil, err
 	}
 	setDir = filepath.Join(rootDir, name)
 	env, err := config.OSEnv()
 	if err != nil {
-		return "", "", nil, err
+		return "", nil, err
 	}
 	cfg, err = config.Load(setDir, env)
 	if errors.Is(err, fs.ErrNotExist) {
-		return "", "", nil, fmt.Errorf("no set %q in %s (expected %s)", name, rootDir, filepath.Join(setDir, config.FileName))
+		return "", nil, fmt.Errorf("no set %q in %s (expected %s)", name, rootDir, filepath.Join(setDir, config.FileName))
 	}
 	if err != nil {
-		return "", "", nil, err
+		return "", nil, err
 	}
-	return rootDir, setDir, cfg, nil
+	return setDir, cfg, nil
 }
 
 // snapshot reads the set and the dest paths the set maps to.
@@ -197,12 +239,13 @@ func describeConflict(c plan.Action) string {
 	return fmt.Sprintf("dest has a %s", c.Found.Kind)
 }
 
-func printLinkSummary(w io.Writer, name, dest string, actions []plan.Action, res exec.Result, total int) {
+func printLinkSummary(w io.Writer, name, dest string, out linkOutcome) {
+	total := out.links
 	counts := map[plan.Op]int{}
-	for _, a := range actions {
+	for _, a := range out.actions {
 		counts[a.Op]++
 	}
-	for _, b := range res.Backups {
+	for _, b := range out.result.Backups {
 		fmt.Fprintf(w, "backed up %s to %s\n", b.Path, displayPath(b.To))
 	}
 	var parts []string

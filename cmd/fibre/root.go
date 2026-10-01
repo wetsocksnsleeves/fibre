@@ -7,7 +7,7 @@ import (
 func newRootCmd(version string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "fibre",
-		Short:        "Link dotfile sets into their destinations and keep them in sync",
+		Short:        "Manage your dotfiles, keep them in sync, and keep machine-specific files local",
 		Version:      version,
 		SilenceUsage: true,
 	}
