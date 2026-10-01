@@ -14,6 +14,8 @@ const (
 	File Kind = iota + 1
 	Dir
 	Symlink
+	// Other is anything else, such as a socket or named pipe.
+	Other
 )
 
 func (k Kind) String() string {
@@ -24,6 +26,8 @@ func (k Kind) String() string {
 		return "directory"
 	case Symlink:
 		return "symlink"
+	case Other:
+		return "special file"
 	}
 	return "unknown"
 }
