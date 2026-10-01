@@ -4,13 +4,15 @@
 
 # Installation
 
+On macOS or Linux, run:
+
 ```sh
 curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/fibre/main/install.sh | sh
 ```
 
-The script downloads the binary for your OS (macOS or Linux, amd64 or arm64)
-from the latest GitHub release and installs it to `~/.local/bin/fibre`. To
-pick a different release or directory:
+The same command works on both, on Intel and ARM. The script detects your
+system, downloads the matching binary from the latest GitHub release, and
+installs it to `~/.local/bin/fibre`. To pick a different release or directory:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/fibre/main/install.sh \
