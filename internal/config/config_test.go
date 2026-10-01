@@ -130,6 +130,12 @@ exclude:
 		{"agents/sub/draft.tmp", false},
 		{"settings.json", false},
 		{"agents/reviewer.md", false},
+		{"settings.json.fibre-bak", true},
+		{"agents/a.md.fibre-bak.3", true},
+		{"a.fibre-tmp", true},
+		{"a.fibre-bak.x", false},
+		{"a.fibre-bak.", false},
+		{"fibre-bak", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.rel, func(t *testing.T) {

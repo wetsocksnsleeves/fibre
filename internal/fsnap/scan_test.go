@@ -74,3 +74,15 @@ func TestLookupMissingDir(t *testing.T) {
 		t.Errorf("Lookup = %v, want empty", tree)
 	}
 }
+
+func TestScanKindsDoesNotHash(t *testing.T) {
+	dir := t.TempDir()
+	write(t, filepath.Join(dir, "a.txt"), "a")
+	tree, err := ScanKinds(dir, func(string) bool { return false })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := tree["a.txt"]; got != (Entry{Kind: File}) {
+		t.Errorf("a.txt = %+v, want a File with no sum", got)
+	}
+}

@@ -14,6 +14,16 @@ import (
 // Scan snapshots the whole tree under dir. Paths for which skip returns true
 // are left out; a skipped directory is not descended into.
 func Scan(dir string, skip func(rel string) bool) (Tree, error) {
+	return scan(dir, skip, true)
+}
+
+// ScanKinds is Scan without hashing file contents: File entries have a zero
+// Sum. It is for finding what exists in a large tree cheaply.
+func ScanKinds(dir string, skip func(rel string) bool) (Tree, error) {
+	return scan(dir, skip, false)
+}
+
+func scan(dir string, skip func(rel string) bool, hash bool) (Tree, error) {
 	tree := Tree{}
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -33,6 +43,10 @@ func Scan(dir string, skip func(rel string) bool) (Tree, error) {
 		info, err := d.Info()
 		if err != nil {
 			return err
+		}
+		if !hash && info.Mode().IsRegular() {
+			tree[rel] = Entry{Kind: File}
+			return nil
 		}
 		e, err := entry(p, info)
 		if err != nil {
