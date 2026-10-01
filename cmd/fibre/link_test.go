@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/wetsocksnsleeves/fibre/internal/root"
 	"github.com/wetsocksnsleeves/fibre/internal/state"
@@ -363,8 +364,11 @@ func TestLinkFromNestedDirectory(t *testing.T) {
 
 func TestLinkWhileLocked(t *testing.T) {
 	e := newEnv(t)
+	old := lockWait
+	lockWait = 100 * time.Millisecond
+	t.Cleanup(func() { lockWait = old })
 	claudeSet(t, e)
-	lock, err := state.Acquire(e.stateDir)
+	lock, err := state.TryAcquire(e.stateDir)
 	if err != nil {
 		t.Fatal(err)
 	}

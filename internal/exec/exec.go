@@ -69,6 +69,8 @@ func Apply(setDir, dest string, actions []plan.Action) (Result, error) {
 			err = replaceWithCopy(setPath, destPath)
 		case plan.OpRemoveLink:
 			err = os.Remove(destPath)
+		case plan.OpDeleteSetFile:
+			err = os.Remove(setPath)
 		default:
 			err = fmt.Errorf("unknown op %v", a.Op)
 		}

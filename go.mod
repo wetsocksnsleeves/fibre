@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	github.com/bmatcuk/doublestar/v4 v4.10.2
 	github.com/spf13/cobra v1.10.2
+	golang.org/x/sys v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

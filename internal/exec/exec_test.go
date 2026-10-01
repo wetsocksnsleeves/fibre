@@ -170,6 +170,17 @@ func TestApplyRemoveLink(t *testing.T) {
 	}
 }
 
+func TestApplyDeleteSetFile(t *testing.T) {
+	setDir, dest := dirs(t)
+	write(t, filepath.Join(setDir, "a"), "a")
+	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpDeleteSetFile, Path: "a"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(filepath.Join(setDir, "a")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("set file not deleted: %v", err)
+	}
+}
+
 func TestApplyBackupThenLink(t *testing.T) {
 	setDir, dest := dirs(t)
 	write(t, filepath.Join(setDir, "a"), "set")
