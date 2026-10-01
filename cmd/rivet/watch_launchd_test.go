@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/launchd"
+	"github.com/wetsocksnsleeves/rivet/internal/launchd"
 )
 
 // fakeLaunchctl models a single agent being loaded and running.
@@ -48,7 +48,7 @@ func fakeManager(t *testing.T) (*launchd.Manager, *fakeLaunchctl) {
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_STATE_HOME", filepath.Join(home, "state"))
 	ctl := &fakeLaunchctl{}
-	m, err := launchd.NewManager("/opt/homebrew/bin/fibre", map[string]string{"XDG_STATE_HOME": filepath.Join(home, "state")})
+	m, err := launchd.NewManager("/opt/homebrew/bin/rivet", map[string]string{"XDG_STATE_HOME": filepath.Join(home, "state")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestWatchInstall(t *testing.T) {
 	if !ctl.loaded {
 		t.Error("agent not loaded")
 	}
-	for _, want := range []string{"~/Library/LaunchAgents/" + launchd.Label + ".plist", "/opt/homebrew/bin/fibre", "XDG_STATE_HOME=~/state", "~/Library/Logs/fibre/watch.log"} {
+	for _, want := range []string{"~/Library/LaunchAgents/" + launchd.Label + ".plist", "/opt/homebrew/bin/rivet", "XDG_STATE_HOME=~/state", "~/Library/Logs/rivet/watch.log"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("install output missing %q:\n%s", want, out)
 		}

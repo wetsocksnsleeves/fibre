@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
-	"github.com/wetsocksnsleeves/fibre/internal/watch"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/watch"
 )
 
 // syncBuffer is a log sink the watcher goroutine and the test can share.

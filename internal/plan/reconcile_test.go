@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func claudeState(set, destTree fsnap.Tree, links ...string) SetState {
@@ -124,7 +124,7 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "excluded real file is left alone",
 			set:  fsnap.New(),
-			dest: fsnap.New().File("projects/p/log.json", "l").File("x.fibre-bak", "b"),
+			dest: fsnap.New().File("projects/p/log.json", "l").File("x.rivet-bak", "b"),
 			want: []string{},
 		},
 		{

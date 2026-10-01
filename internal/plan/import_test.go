@@ -4,14 +4,14 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func TestImport(t *testing.T) {
 	destTree := fsnap.New().
 		File("settings.json", "{}").
-		File("fibre.yaml", "not ours").
+		File("rivet.yaml", "not ours").
 		File("agents/reviewer.md", "r").
 		File("agents/deep/nested.md", "n").
 		Dir("empty").

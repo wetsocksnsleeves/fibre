@@ -12,7 +12,7 @@ import (
 )
 
 // ErrLocked is returned when another process holds the lock.
-var ErrLocked = errors.New("another fibre command is running")
+var ErrLocked = errors.New("another rivet command is running")
 
 // Lock is an exclusive lock on a file in the state directory. The OS
 // releases it if the process exits.

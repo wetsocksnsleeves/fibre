@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func write(t *testing.T, p string) {

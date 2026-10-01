@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func TestActionable(t *testing.T) {

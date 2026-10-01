@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wetsocksnsleeves/fibre/internal/root"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 // env is a temp dotfiles root, a temp state dir, and a base directory for
@@ -25,18 +25,18 @@ func newEnv(t *testing.T) *env {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := &env{root: filepath.Join(base, "dotfiles"), stateDir: filepath.Join(base, "state", "fibre"), base: base}
+	e := &env{root: filepath.Join(base, "dotfiles"), stateDir: filepath.Join(base, "state", "rivet"), base: base}
 	writeFile(t, filepath.Join(e.root, root.Marker), "")
 	t.Setenv("XDG_STATE_HOME", filepath.Join(base, "state"))
 	t.Chdir(e.root)
 	return e
 }
 
-// set creates a set with the given fibre.yaml and files, and returns its dir.
+// set creates a set with the given rivet.yaml and files, and returns its dir.
 func (e *env) set(t *testing.T, name, yaml string, files map[string]string) string {
 	t.Helper()
 	dir := filepath.Join(e.root, name)
-	writeFile(t, filepath.Join(dir, "fibre.yaml"), yaml)
+	writeFile(t, filepath.Join(dir, "rivet.yaml"), yaml)
 	for rel, contents := range files {
 		writeFile(t, filepath.Join(dir, rel), contents)
 	}
@@ -132,7 +132,7 @@ func TestLinkIntoMissingDest(t *testing.T) {
 		t.Errorf("dest/agents should be a real directory: %v", err)
 	}
 	assertMissing(t, filepath.Join(dest, "projects"))
-	assertMissing(t, filepath.Join(dest, "fibre.yaml"))
+	assertMissing(t, filepath.Join(dest, "rivet.yaml"))
 	if want := "linked claude into ~/.claude: 2 new (2 links)\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
@@ -246,10 +246,10 @@ func TestLinkForce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("link --force: %v\n%s", err, out)
 	}
-	assertRealFile(t, filepath.Join(dest, "settings.json.fibre-bak"), `{"mine":1}`)
+	assertRealFile(t, filepath.Join(dest, "settings.json.rivet-bak"), `{"mine":1}`)
 	assertRealFile(t, filepath.Join(setDir, "settings.json"), "{}")
 	assertSymlink(t, filepath.Join(dest, "settings.json"), filepath.Join(setDir, "settings.json"))
-	if !strings.Contains(out, "backed up settings.json to ~/.claude/settings.json.fibre-bak") {
+	if !strings.Contains(out, "backed up settings.json to ~/.claude/settings.json.rivet-bak") {
 		t.Errorf("output does not report the backup:\n%s", out)
 	}
 }
@@ -322,7 +322,7 @@ func TestLinkRefusesChangedDest(t *testing.T) {
 	if out, err := run(t, "link", "claude"); err != nil {
 		t.Fatalf("link: %v\n%s", err, out)
 	}
-	writeFile(t, filepath.Join(setDir, "fibre.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
+	writeFile(t, filepath.Join(setDir, "rivet.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
 	if _, err := run(t, "link", "claude"); err == nil || !strings.Contains(err.Error(), "unlink it first") {
 		t.Errorf("err = %v, want a changed-dest error", err)
 	}
@@ -384,7 +384,7 @@ func TestLinkShortFlags(t *testing.T) {
 			assertRealFile(t, filepath.Join(setDir, "settings.json"), "mine")
 		},
 		"-f": func(t *testing.T, setDir, dest string) {
-			assertRealFile(t, filepath.Join(dest, "settings.json.fibre-bak"), "mine")
+			assertRealFile(t, filepath.Join(dest, "settings.json.rivet-bak"), "mine")
 		},
 		"-s": func(t *testing.T, setDir, dest string) {
 			assertRealFile(t, filepath.Join(dest, "settings.json"), "mine")

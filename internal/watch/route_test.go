@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
 )
 
 const (
@@ -197,7 +197,7 @@ func TestSelfTriggeredEventsPlanNothing(t *testing.T) {
 }
 
 func TestEventsDuringCLILockPlanNothing(t *testing.T) {
-	// fibre link runs while the watcher is up: its links raise events, which
+	// rivet link runs while the watcher is up: its links raise events, which
 	// are held until the lock is released and then find nothing to do.
 	d := NewDebouncer(window)
 	d.SetLocked(true)

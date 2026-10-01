@@ -12,10 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
-	"github.com/wetsocksnsleeves/fibre/internal/workspace"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/workspace"
 )
 
 func newStatusCmd() *cobra.Command {
@@ -128,7 +128,7 @@ func runStatus(w io.Writer, only string, all bool, verbose int, color bool) erro
 			if err != nil {
 				ss.err = err.Error()
 			} else {
-				ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `fibre link %s`)", name)
+				ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `rivet link %s`)", name)
 			}
 			continue
 		}
@@ -189,9 +189,9 @@ const (
 func (k statusKind) heading(set string) string {
 	switch k {
 	case kindConflict:
-		return fmt.Sprintf("Conflicts (resolve with `fibre link %s` and --adopt, --force or --skip):", set)
+		return fmt.Sprintf("Conflicts (resolve with `rivet link %s` and --adopt, --force or --skip):", set)
 	case kindUnlinked:
-		return fmt.Sprintf("Not linked (new in the set; the watcher or `fibre link %s` will link them):", set)
+		return fmt.Sprintf("Not linked (new in the set; the watcher or `rivet link %s` will link them):", set)
 	case kindModified:
 		return "Modified in dest (a real file replaced the link; the watcher will copy it into the set):"
 	case kindDeleted:
@@ -322,7 +322,7 @@ func printCompactStatus(w io.Writer, sets []*setStatus, color bool) {
 			if s.linked {
 				fmt.Fprintln(w, "Linked:")
 			} else {
-				fmt.Fprintln(w, "Not linked (run `fibre link <set>`):")
+				fmt.Fprintln(w, "Not linked (run `rivet link <set>`):")
 			}
 		}
 		var state string
@@ -351,12 +351,12 @@ func printCompactStatus(w io.Writer, sets []*setStatus, color bool) {
 		fmt.Fprintln(w, strings.TrimRight(line, " "))
 	}
 	if needsDetail {
-		fmt.Fprintln(w, "Run `fibre status -v` to see what needs attention.")
+		fmt.Fprintln(w, "Run `rivet status -v` to see what needs attention.")
 	}
 }
 
 // rootSets returns the names of the directories in rootDir that hold a
-// fibre.yaml.
+// rivet.yaml.
 func rootSets(rootDir string) ([]string, error) {
 	entries, err := os.ReadDir(rootDir)
 	if err != nil {

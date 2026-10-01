@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
 )
 
 // ConflictError is returned by Apply for a plan that still has conflicts.
@@ -84,7 +84,7 @@ func Apply(setDir, dest string, actions []plan.Action) (Result, error) {
 // replaceWithLink swaps the file at destPath for a symlink to setPath in one
 // rename, so destPath is never missing.
 func replaceWithLink(setPath, destPath string) error {
-	tmp := destPath + ".fibre-tmp"
+	tmp := destPath + ".rivet-tmp"
 	if err := os.Symlink(setPath, tmp); err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func replaceWithLink(setPath, destPath string) error {
 // rename, so destPath is never missing. A set file that is itself a symlink
 // is copied as a symlink with the same target.
 func replaceWithCopy(setPath, destPath string) error {
-	tmp := destPath + ".fibre-tmp"
+	tmp := destPath + ".rivet-tmp"
 	info, err := os.Lstat(setPath)
 	if err != nil {
 		return err
@@ -136,10 +136,10 @@ func adopt(setPath, destPath string) error {
 	return os.Symlink(setPath, destPath)
 }
 
-// backup renames p to the first free name of p.fibre-bak, p.fibre-bak.1, ...
+// backup renames p to the first free name of p.rivet-bak, p.rivet-bak.1, ...
 func backup(p string) (string, error) {
 	for i := 0; ; i++ {
-		to := p + ".fibre-bak"
+		to := p + ".rivet-bak"
 		if i > 0 {
 			to = fmt.Sprintf("%s.%d", to, i)
 		}

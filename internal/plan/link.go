@@ -1,4 +1,4 @@
-// Package plan computes the actions fibre takes from snapshots. Planners do
+// Package plan computes the actions rivet takes from snapshots. Planners do
 // no I/O; an executor applies their output.
 package plan
 
@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 // Op is the kind of an Action.

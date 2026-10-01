@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
 )
 
 func write(t *testing.T, p, contents string) {
@@ -71,7 +71,7 @@ func TestApplyReplaceWithLink(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertLink(t, filepath.Join(dest, "a"), filepath.Join(setDir, "a"))
-	if _, err := os.Lstat(filepath.Join(dest, "a.fibre-tmp")); !errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Lstat(filepath.Join(dest, "a.rivet-tmp")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("temp link left behind: %v", err)
 	}
 }
@@ -189,7 +189,7 @@ func TestApplyBackupThenLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bak := filepath.Join(dest, "a.fibre-bak")
+	bak := filepath.Join(dest, "a.rivet-bak")
 	if got := read(t, bak); got != "dest" {
 		t.Errorf("backup = %q, want %q", got, "dest")
 	}
@@ -202,20 +202,20 @@ func TestApplyBackupThenLink(t *testing.T) {
 func TestApplyBackupPicksFreeName(t *testing.T) {
 	setDir, dest := dirs(t)
 	write(t, filepath.Join(dest, "a"), "new")
-	write(t, filepath.Join(dest, "a.fibre-bak"), "older")
-	write(t, filepath.Join(dest, "a.fibre-bak.1"), "oldest")
+	write(t, filepath.Join(dest, "a.rivet-bak"), "older")
+	write(t, filepath.Join(dest, "a.rivet-bak.1"), "oldest")
 	res, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpBackup, Path: "a"}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := filepath.Join(dest, "a.fibre-bak.2")
+	want := filepath.Join(dest, "a.rivet-bak.2")
 	if len(res.Backups) != 1 || res.Backups[0].To != want {
 		t.Fatalf("Backups = %+v, want one to %s", res.Backups, want)
 	}
 	if got := read(t, want); got != "new" {
 		t.Errorf("backup = %q", got)
 	}
-	if got := read(t, filepath.Join(dest, "a.fibre-bak")); got != "older" {
+	if got := read(t, filepath.Join(dest, "a.rivet-bak")); got != "older" {
 		t.Errorf("existing backup overwritten: %q", got)
 	}
 }
@@ -226,7 +226,7 @@ func TestApplyBackupDirectory(t *testing.T) {
 	if _, err := Apply(setDir, dest, []plan.Action{{Op: plan.OpBackup, Path: "d"}, {Op: plan.OpMkDir, Path: "d"}}); err != nil {
 		t.Fatal(err)
 	}
-	if got := read(t, filepath.Join(dest, "d.fibre-bak", "inner")); got != "x" {
+	if got := read(t, filepath.Join(dest, "d.rivet-bak", "inner")); got != "x" {
 		t.Errorf("backed-up directory contents = %q", got)
 	}
 	entries, err := os.ReadDir(filepath.Join(dest, "d"))

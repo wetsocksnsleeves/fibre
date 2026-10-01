@@ -1,5 +1,5 @@
 // Package root finds and creates dotfiles roots. A root is a directory
-// containing a .fibre marker file.
+// containing a .rivet marker file.
 package root
 
 import (
@@ -11,10 +11,10 @@ import (
 )
 
 // Marker is the file that marks a directory as a dotfiles root.
-const Marker = ".fibre"
+const Marker = ".rivet"
 
 // ErrNotFound is returned by Find when no root contains the start directory.
-var ErrNotFound = errors.New("not inside a fibre root (no " + Marker + " found in this directory or any parent; run `fibre init` to create one)")
+var ErrNotFound = errors.New("not inside a rivet root (no " + Marker + " found in this directory or any parent; run `rivet init` to create one)")
 
 // Find returns the absolute path of the nearest directory at or above start
 // that contains a Marker file.

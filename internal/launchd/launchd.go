@@ -17,12 +17,12 @@ import (
 )
 
 // Label is the launchd label of the watcher agent.
-const Label = "io.github.wetsocksnsleeves.fibre"
+const Label = "io.github.wetsocksnsleeves.rivet"
 
 // Agent describes the launch agent that runs the watcher.
 type Agent struct {
 	Label string
-	// Program is the fibre executable; it is run as `Program watch run`.
+	// Program is the rivet executable; it is run as `Program watch run`.
 	Program string
 	// Env is set in the agent's environment, e.g. XDG_STATE_HOME so the
 	// agent uses the same state as the shell it was installed from.
@@ -102,7 +102,7 @@ func NewManager(program string, env map[string]string) (*Manager, error) {
 			Label:   Label,
 			Program: program,
 			Env:     env,
-			LogPath: filepath.Join(home, "Library", "Logs", "fibre", "watch.log"),
+			LogPath: filepath.Join(home, "Library", "Logs", "rivet", "watch.log"),
 		},
 		PlistPath: filepath.Join(home, "Library", "LaunchAgents", Label+".plist"),
 		Domain:    fmt.Sprintf("gui/%d", os.Getuid()),
@@ -146,7 +146,7 @@ func (m *Manager) Uninstall() error {
 }
 
 // ErrNotInstalled is returned by Start when there is no plist.
-var ErrNotInstalled = errors.New("the watcher agent is not installed; run `fibre watch install`")
+var ErrNotInstalled = errors.New("the watcher agent is not installed; run `rivet watch install`")
 
 // Start starts the installed agent, loading it first if needed.
 func (m *Manager) Start() error {

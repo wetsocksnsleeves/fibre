@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
 )
 
 func TestInitCreatesRoot(t *testing.T) {
@@ -18,7 +18,7 @@ func TestInitCreatesRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, "Initialized fibre root") {
+	if !strings.Contains(out, "Initialized rivet root") {
 		t.Errorf("output = %q", out)
 	}
 	if _, err := os.Stat(filepath.Join(dir, root.Marker)); err != nil {
@@ -35,7 +35,7 @@ func TestInitExistingRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, "already a fibre root") {
+	if !strings.Contains(out, "already a rivet root") {
 		t.Errorf("output = %q", out)
 	}
 }
@@ -69,8 +69,8 @@ func TestInitSetWithMissingDest(t *testing.T) {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 	want := "dest: " + dest + "\nexclude:\n    - history.jsonl\n    - projects/**\n"
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != want {
-		t.Errorf("fibre.yaml =\n%s\nwant\n%s", got, want)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != want {
+		t.Errorf("rivet.yaml =\n%s\nwant\n%s", got, want)
 	}
 	assertMissing(t, dest)
 	if _, ok := e.state(t).Linked["claude"]; ok {
@@ -85,8 +85,8 @@ func TestInitSetWritesDestUnderHomeWithTilde(t *testing.T) {
 	if out, err := run(t, "init", "claude", "--dest", filepath.Join(home, ".claude")); err != nil {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != "dest: ~/.claude\n" {
-		t.Errorf("fibre.yaml = %q", got)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != "dest: ~/.claude\n" {
+		t.Errorf("rivet.yaml = %q", got)
 	}
 }
 
@@ -96,8 +96,8 @@ func TestInitSetKeepsUnexpandedDest(t *testing.T) {
 	if out, err := run(t, "init", "claude", "--dest", "$HOME/.claude"); err != nil {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != "dest: $HOME/.claude\n" {
-		t.Errorf("fibre.yaml = %q", got)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != "dest: $HOME/.claude\n" {
+		t.Errorf("rivet.yaml = %q", got)
 	}
 }
 
@@ -107,8 +107,8 @@ func TestInitSetMakesRelativeDestAbsolute(t *testing.T) {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 	want := "dest: " + filepath.Join(e.base, "out") + "\n"
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != want {
-		t.Errorf("fibre.yaml = %q, want %q", got, want)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != want {
+		t.Errorf("rivet.yaml = %q, want %q", got, want)
 	}
 }
 
@@ -233,8 +233,8 @@ func TestInitSetRefusesExistingSet(t *testing.T) {
 	if _, err := run(t, "init", "claude", "--dest", dest); err == nil || !strings.Contains(err.Error(), "already exists") {
 		t.Errorf("err = %v", err)
 	}
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != "dest: /somewhere\n" {
-		t.Errorf("fibre.yaml overwritten: %q", got)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != "dest: /somewhere\n" {
+		t.Errorf("rivet.yaml overwritten: %q", got)
 	}
 	assertRealFile(t, filepath.Join(dest, "b"), "b")
 }
@@ -298,8 +298,8 @@ func TestInitSetRefusesHomeUnlessStrict(t *testing.T) {
 	if err != nil {
 		t.Fatalf("init --strict: %v\n%s", err, out)
 	}
-	if got := readFile(t, filepath.Join(e.root, "zsh", "fibre.yaml")); got != "dest: \"~\"\nstrict: true\n" {
-		t.Errorf("fibre.yaml = %q", got)
+	if got := readFile(t, filepath.Join(e.root, "zsh", "rivet.yaml")); got != "dest: \"~\"\nstrict: true\n" {
+		t.Errorf("rivet.yaml = %q", got)
 	}
 	assertRealFile(t, filepath.Join(home, ".zshrc"), "z")
 	assertMissing(t, filepath.Join(e.root, "zsh", ".zshrc"))
@@ -312,7 +312,7 @@ func TestInitSetShortFlags(t *testing.T) {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 	want := "dest: " + dest + "\nexclude:\n    - a\n    - b\nstrict: true\n"
-	if got := readFile(t, filepath.Join(e.root, "claude", "fibre.yaml")); got != want {
-		t.Errorf("fibre.yaml = %q, want %q", got, want)
+	if got := readFile(t, filepath.Join(e.root, "claude", "rivet.yaml")); got != want {
+		t.Errorf("rivet.yaml = %q, want %q", got, want)
 	}
 }

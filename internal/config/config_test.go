@@ -114,9 +114,9 @@ exclude:
 		rel  string
 		want bool
 	}{
-		{"fibre.yaml", true},
-		{"./fibre.yaml", true},
-		{"agents/fibre.yaml", false},
+		{"rivet.yaml", true},
+		{"./rivet.yaml", true},
+		{"agents/rivet.yaml", false},
 		{"history.jsonl", true},
 		{"agents/history.jsonl", false},
 		{"projects", true},
@@ -130,12 +130,12 @@ exclude:
 		{"agents/sub/draft.tmp", false},
 		{"settings.json", false},
 		{"agents/reviewer.md", false},
-		{"settings.json.fibre-bak", true},
-		{"agents/a.md.fibre-bak.3", true},
-		{"a.fibre-tmp", true},
-		{"a.fibre-bak.x", false},
-		{"a.fibre-bak.", false},
-		{"fibre-bak", false},
+		{"settings.json.rivet-bak", true},
+		{"agents/a.md.rivet-bak.3", true},
+		{"a.rivet-tmp", true},
+		{"a.rivet-bak.x", false},
+		{"a.rivet-bak.", false},
+		{"rivet-bak", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.rel, func(t *testing.T) {

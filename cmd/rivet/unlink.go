@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/wetsocksnsleeves/fibre/internal/exec"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/exec"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 func newUnlinkCmd() *cobra.Command {
@@ -44,7 +44,7 @@ func runUnlink(stdout io.Writer, name string) error {
 			return fmt.Errorf("%s is not linked on this machine", name)
 		}
 
-		// State, not fibre.yaml, says where the links are: the config may
+		// State, not rivet.yaml, says where the links are: the config may
 		// have changed, or the set may have been deleted, since linking.
 		setDir := filepath.Join(rootDir, name)
 		set, err := fsnap.Lookup(setDir, linked.Links)

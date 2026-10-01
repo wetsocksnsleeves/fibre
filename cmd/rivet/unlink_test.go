@@ -85,7 +85,7 @@ func TestUnlinkKeepsOtherSets(t *testing.T) {
 func TestUnlinkLeavesUnmanagedPaths(t *testing.T) {
 	e := newEnv(t)
 	setDir, dest := linkClaude(t, e)
-	// A real file fibre never linked, a link the user made by hand, and a
+	// A real file rivet never linked, a link the user made by hand, and a
 	// manifest path the user replaced with a real file.
 	writeFile(t, filepath.Join(dest, "history.jsonl"), "h")
 	writeFile(t, filepath.Join(setDir, "extra.md"), "extra")
@@ -129,7 +129,7 @@ func TestUnlinkRemovesLinksToDeletedSetFiles(t *testing.T) {
 func TestUnlinkWorksAfterDestChangeInConfig(t *testing.T) {
 	e := newEnv(t)
 	setDir, dest := linkClaude(t, e)
-	writeFile(t, filepath.Join(setDir, "fibre.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
+	writeFile(t, filepath.Join(setDir, "rivet.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
 	if out, err := run(t, "unlink", "claude"); err != nil {
 		t.Fatalf("unlink: %v\n%s", err, out)
 	}

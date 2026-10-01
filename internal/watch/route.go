@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
 )
 
 // Target is a linked set as events are routed to it.
@@ -24,7 +24,7 @@ type Hit struct {
 // directory or dest contains it, unless that set excludes it. Nested dests
 // mean one path can concern several sets; Reconcile decides which one acts.
 //
-// Paths inside an ignored directory (the root and fibre's state, which may
+// Paths inside an ignored directory (the root and rivet's state, which may
 // sit inside a dest such as $HOME) are only routed to the set they belong
 // to, never to a dest that happens to contain them.
 func Route(abs string, targets []Target, ignored []string) []Hit {

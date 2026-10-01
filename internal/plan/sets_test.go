@@ -4,13 +4,13 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func TestLinked(t *testing.T) {
 	set := fsnap.New().
-		File("fibre.yaml", "x").
+		File("rivet.yaml", "x").
 		File("a", "a").
 		File("b", "b").
 		File("c", "c").

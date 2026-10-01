@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 // SetState is one linked set as Reconcile sees it.
@@ -31,7 +31,7 @@ type SetPlan struct {
 }
 
 // Reconcile plans bringing each linked set and its dest back in line after
-// changes made outside fibre, using the manifest to tell a new set file
+// changes made outside rivet, using the manifest to tell a new set file
 // from a deleted link:
 //
 //	set file  dest                 manifest  action

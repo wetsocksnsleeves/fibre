@@ -31,7 +31,7 @@ func golden(t *testing.T, name, got string) {
 	}
 }
 
-// statusScenario links sets and then changes things behind fibre's back so
+// statusScenario links sets and then changes things behind rivet's back so
 // that status has one line of every kind to show.
 func statusScenario(t *testing.T) *env {
 	t.Helper()
@@ -78,7 +78,7 @@ func statusScenario(t *testing.T) *env {
 	// UNTRACKED: new real files in dest; one excluded, one a tie.
 	writeFile(t, filepath.Join(claude, "agents", "draft.md"), "draft")
 	writeFile(t, filepath.Join(claude, "projects", "p", "log.json"), "log")
-	writeFile(t, filepath.Join(claude, "settings.json.fibre-bak"), "backup")
+	writeFile(t, filepath.Join(claude, "settings.json.rivet-bak"), "backup")
 	writeFile(t, filepath.Join(home, ".local", "bin", "myscript"), "s")
 	return e
 }
@@ -135,7 +135,7 @@ func TestStatusOneSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("status nvim: %v\n%s", err, out)
 	}
-	want := "Linked:\n  nvim → ~/.config/nvim  synced\n\nWatcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground).\n"
+	want := "Linked:\n  nvim → ~/.config/nvim  synced\n\nWatcher is not running, so nothing is synced automatically. Start it with `rivet watch install` (or `rivet watch run` in the foreground).\n"
 	if out != want {
 		t.Errorf("status nvim = %q, want %q", out, want)
 	}
@@ -186,7 +186,7 @@ func TestStatusReportsBrokenConfig(t *testing.T) {
 func TestStatusReportsChangedDest(t *testing.T) {
 	e := newEnv(t)
 	setDir, _ := linkClaude(t, e)
-	writeFile(t, filepath.Join(setDir, "fibre.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
+	writeFile(t, filepath.Join(setDir, "rivet.yaml"), "dest: "+filepath.Join(e.base, "elsewhere")+"\n")
 	out, err := run(t, "status")
 	if err != nil {
 		t.Fatalf("status: %v", err)

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 func TestUnlink(t *testing.T) {
