@@ -101,13 +101,41 @@ func TestStatusVerboseGolden(t *testing.T) {
 	golden(t, "status-verbose.golden", out)
 }
 
+func TestStatusVeryVerboseGolden(t *testing.T) {
+	statusScenario(t)
+	out, err := run(t, "status", "-vv")
+	if err != nil {
+		t.Fatalf("status -vv: %v\n%s", err, out)
+	}
+	golden(t, "status-very-verbose.golden", out)
+}
+
+func TestStatusListsLinkedSetsFirst(t *testing.T) {
+	e := newEnv(t)
+	t.Setenv("HOME", filepath.Join(e.base, "home"))
+	e.set(t, "alpha", "dest: ~/.alpha\n", map[string]string{"a": "a"})
+	e.set(t, "beta", "dest: ~/.beta\n", map[string]string{"b": "b"})
+	if out, err := run(t, "link", "beta"); err != nil {
+		t.Fatalf("link beta: %v\n%s", err, out)
+	}
+	for _, args := range [][]string{{"status"}, {"status", "-v"}} {
+		out, err := run(t, args...)
+		if err != nil {
+			t.Fatalf("%v: %v\n%s", args, err, out)
+		}
+		if a, b := strings.Index(out, "alpha"), strings.Index(out, "beta"); a < 0 || b < 0 || b > a {
+			t.Errorf("%v does not list the linked set beta before alpha:\n%s", args, out)
+		}
+	}
+}
+
 func TestStatusOneSet(t *testing.T) {
 	statusScenario(t)
 	out, err := run(t, "status", "nvim")
 	if err != nil {
 		t.Fatalf("status nvim: %v\n%s", err, out)
 	}
-	want := "nvim → ~/.config/nvim   1 linked, in sync\n\nWatcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground).\n"
+	want := "Linked:\n  nvim → ~/.config/nvim  synced\n\nWatcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground).\n"
 	if out != want {
 		t.Errorf("status nvim = %q, want %q", out, want)
 	}
@@ -115,9 +143,9 @@ func TestStatusOneSet(t *testing.T) {
 
 func TestStatusOneSetStillSeesOtherSetsForOwnership(t *testing.T) {
 	statusScenario(t)
-	out, err := run(t, "status", "rofi")
+	out, err := run(t, "status", "-v", "rofi")
 	if err != nil {
-		t.Fatalf("status rofi: %v\n%s", err, out)
+		t.Fatalf("status -v rofi: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "    bin/myscript  (rofi, tools)") {
 		t.Errorf("status rofi does not report the tie:\n%s", out)

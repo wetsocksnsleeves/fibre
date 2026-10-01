@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 
@@ -18,11 +19,15 @@ import (
 )
 
 func newStatusCmd() *cobra.Command {
-	var verbose, all bool
+	var verbose int
+	var all bool
 	cmd := &cobra.Command{
 		Use:   "status [set]",
-		Short: "Show each set's links and the paths that need attention",
-		Long: `Show each set's links and the paths that need attention.
+		Short: "Show whether each set is in sync",
+		Long: `Show whether each set is in sync, linked sets first.
+
+-v also lists the paths that need attention in each set, and -vv also lists
+every link.
 
 status works inside the dotfiles root and inside any linked set's dest. In a
 dest it shows only that set; pass --all to show every set.`,
@@ -38,7 +43,7 @@ dest it shows only that set; pass --all to show every set.`,
 			return runStatus(cmd.OutOrStdout(), only, all, verbose, useColor(cmd.OutOrStdout()))
 		},
 	}
-	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "list every link")
+	cmd.Flags().CountVarP(&verbose, "verbose", "v", "list the paths that need attention (-vv also lists every link)")
 	cmd.Flags().BoolVarP(&all, "all", "a", false, "show every set, even inside a set's dest")
 	return cmd
 }
@@ -46,8 +51,12 @@ dest it shows only that set; pass --all to show every set.`,
 // setStatus is one set's block of status output.
 type setStatus struct {
 	name, dest string
-	summary    string
-	groups     []group
+	linked     bool
+	synced     bool
+	// err is set when the set's config or files could not be read.
+	err     string
+	summary string
+	groups  []group
 }
 
 // group is a heading and the paths listed under it.
@@ -57,7 +66,7 @@ type group struct {
 	items   []string
 }
 
-func runStatus(w io.Writer, only string, all, verbose, color bool) error {
+func runStatus(w io.Writer, only string, all bool, verbose int, color bool) error {
 	if only != "" {
 		if err := validateSetName(only); err != nil {
 			return err
@@ -117,20 +126,20 @@ func runStatus(w io.Writer, only string, all, verbose, color bool) error {
 		if !linked {
 			cfg, err := config.Load(filepath.Join(rootDir, name), env)
 			if err != nil {
-				ss.summary = "error: " + err.Error()
+				ss.err = err.Error()
 			} else {
 				ss.dest, ss.summary = displayPath(cfg.Dest), fmt.Sprintf("not linked (run `fibre link %s`)", name)
 			}
 			continue
 		}
-		ss.dest = displayPath(st.Linked[name].Dest)
+		ss.dest, ss.linked = displayPath(st.Linked[name].Dest), true
 		if ws.Err != nil {
-			ss.summary = "error: " + ws.Err.Error()
+			ss.err = ws.Err.Error()
 			continue
 		}
 		s, err := ws.Snapshot(ig)
 		if err != nil {
-			ss.summary = "error: " + err.Error()
+			ss.err = err.Error()
 			continue
 		}
 		states = append(states, s)
@@ -140,16 +149,23 @@ func runStatus(w io.Writer, only string, all, verbose, color bool) error {
 		s := states[i]
 		ss := statuses[p.Name]
 		linked := plan.Linked(plan.LinkInput{SetDir: s.SetDir, Dest: s.Dest, Set: s.Set, DestTree: s.DestTree, Excluded: s.Excluded})
-		ss.summary, ss.groups = describePlan(s, p.Actions, linked, verbose)
+		ss.summary, ss.groups, ss.synced = describePlan(s, p.Actions, linked, verbose > 1)
 	}
 
+	// Linked sets first, then the rest; each group sorted by name.
 	var shown []*setStatus
-	for _, name := range names {
-		if only == "" || name == only {
-			shown = append(shown, statuses[name])
+	for _, linked := range []bool{true, false} {
+		for _, name := range names {
+			if ss := statuses[name]; ss.linked == linked && (only == "" || name == only) {
+				shown = append(shown, ss)
+			}
 		}
 	}
-	printStatus(w, shown, color)
+	if verbose > 0 {
+		printStatus(w, shown, color)
+	} else {
+		printCompactStatus(w, shown, color)
+	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, watcherLine(stateDir))
 	return nil
@@ -225,7 +241,9 @@ func statusKindOf(s plan.SetState, a plan.Action) (statusKind, bool) {
 	return 0, false
 }
 
-func describePlan(s plan.SetState, actions []plan.Action, linked []string, verbose bool) (string, []group) {
+// describePlan returns a set's summary, its groups of paths, and whether
+// nothing needs attention. The linked paths are a group only with all.
+func describePlan(s plan.SetState, actions []plan.Action, linked []string, all bool) (string, []group, bool) {
 	items := map[statusKind][]string{}
 	for _, a := range actions {
 		k, ok := statusKindOf(s, a)
@@ -241,7 +259,7 @@ func describePlan(s plan.SetState, actions []plan.Action, linked []string, verbo
 		}
 		items[k] = append(items[k], item)
 	}
-	if verbose {
+	if all {
 		items[kindLinked] = linked
 	}
 
@@ -260,7 +278,7 @@ func describePlan(s plan.SetState, actions []plan.Action, linked []string, verbo
 	if problems == 0 {
 		summary += ", in sync"
 	}
-	return summary, groups
+	return summary, groups, problems == 0
 }
 
 func printStatus(w io.Writer, sets []*setStatus, color bool) {
@@ -272,13 +290,68 @@ func printStatus(w io.Writer, sets []*setStatus, color bool) {
 		if s.dest != "" {
 			head += " → " + s.dest
 		}
-		fmt.Fprintf(w, "%s   %s\n", head, s.summary)
+		summary := s.summary
+		if s.err != "" {
+			summary = "error: " + s.err
+		}
+		fmt.Fprintf(w, "%s   %s\n", head, summary)
 		for _, g := range s.groups {
 			fmt.Fprintf(w, "  %s\n", paint(color, g.tone, g.heading))
 			for _, item := range g.items {
 				fmt.Fprintf(w, "    %s\n", item)
 			}
 		}
+	}
+}
+
+// printCompactStatus prints one line per set, under a heading for linked
+// sets and one for the rest, with names and dests in aligned columns.
+func printCompactStatus(w io.Writer, sets []*setStatus, color bool) {
+	nameWidth, destWidth := 0, 0
+	for _, s := range sets {
+		nameWidth = max(nameWidth, utf8.RuneCountInString(s.name))
+		destWidth = max(destWidth, utf8.RuneCountInString(s.dest))
+	}
+	pad := func(s string, width int) string {
+		return strings.Repeat(" ", width-utf8.RuneCountInString(s))
+	}
+
+	needsDetail := false
+	for i, s := range sets {
+		if i == 0 || s.linked != sets[i-1].linked {
+			if s.linked {
+				fmt.Fprintln(w, "Linked:")
+			} else {
+				fmt.Fprintln(w, "Not linked (run `fibre link <set>`):")
+			}
+		}
+		var state string
+		switch {
+		case s.err != "":
+			state = paint(color, toneBad, "error: "+s.err)
+		case !s.linked:
+		case s.synced:
+			state = paint(color, toneGood, "synced")
+		default:
+			state = paint(color, toneWarn, "not synced")
+			needsDetail = true
+		}
+		line := "  " + paint(color, toneBold, s.name) + pad(s.name, nameWidth)
+		if s.dest != "" {
+			line += " → " + s.dest
+		}
+		if state != "" {
+			if s.dest == "" {
+				line += "   " + pad("", destWidth)
+			} else {
+				line += pad(s.dest, destWidth)
+			}
+			line += "  " + state
+		}
+		fmt.Fprintln(w, strings.TrimRight(line, " "))
+	}
+	if needsDetail {
+		fmt.Fprintln(w, "Run `fibre status -v` to see what needs attention.")
 	}
 }
 

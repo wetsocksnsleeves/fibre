@@ -177,3 +177,73 @@ func TestLoadMissingFile(t *testing.T) {
 		t.Errorf("err = %v, want not-exist", err)
 	}
 }
+
+func TestAddExcludes(t *testing.T) {
+	tests := []struct {
+		name, yaml string
+		add        []string
+		want       string
+		added      []string
+	}{
+		{
+			"appends to the list",
+			"dest: $HOME/.claude\nexclude:\n  - history.jsonl\n",
+			[]string{"todos/**", "history.jsonl"},
+			"dest: $HOME/.claude\nexclude:\n  - history.jsonl\n  - todos/**\n",
+			[]string{"todos/**"},
+		},
+		{
+			"adds the key",
+			"# my set\ndest: ~/.claude\nstrict: true\n",
+			[]string{"a.json", "b.json"},
+			"# my set\ndest: ~/.claude\nstrict: true\nexclude:\n  - a.json\n  - b.json\n",
+			[]string{"a.json", "b.json"},
+		},
+		{
+			"replaces an empty key",
+			"dest: ~/.claude\nexclude:\n",
+			[]string{"a.json"},
+			"dest: ~/.claude\nexclude:\n  - a.json\n",
+			[]string{"a.json"},
+		},
+		{
+			"turns a flow list into a block list",
+			"dest: ~/.claude\nexclude: [a.json]\n",
+			[]string{"b.json"},
+			"dest: ~/.claude\nexclude:\n  - a.json\n  - b.json\n",
+			[]string{"b.json"},
+		},
+		{
+			"leaves the file alone when nothing is new",
+			"dest:   ~/.claude\nexclude: [a.json]\n",
+			[]string{"a.json"},
+			"dest:   ~/.claude\nexclude: [a.json]\n",
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, added, err := AddExcludes([]byte(tt.yaml), tt.add)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != tt.want {
+				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
+			}
+			if strings.Join(added, ",") != strings.Join(tt.added, ",") {
+				t.Errorf("added = %q, want %q", added, tt.added)
+			}
+		})
+	}
+}
+
+func TestAddExcludesRejectsBadPatterns(t *testing.T) {
+	for _, p := range []string{"", "/abs", "[unclosed"} {
+		if _, _, err := AddExcludes([]byte("dest: ~\n"), []string{p}); err == nil {
+			t.Errorf("AddExcludes(%q) = nil error", p)
+		}
+	}
+	if _, _, err := AddExcludes([]byte("dest: ~\nexclude: a\n"), []string{"b"}); err == nil {
+		t.Error("AddExcludes with a scalar exclude = nil error")
+	}
+}
