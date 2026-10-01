@@ -17,4 +17,6 @@ jobs:
         with:
           go-version-file: go.mod
       - run: make test
+      # Tests already compile every package, so only main builds the binary.
       - run: make build
+        if: github.event_name == 'push'
