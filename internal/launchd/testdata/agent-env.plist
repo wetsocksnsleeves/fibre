@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>io.github.wetsocksnsleeves.fibre</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/me/code/a&amp;b/fibre</string>
+		<string>watch</string>
+		<string>run</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>A</key>
+		<string>&lt;1&gt;</string>
+		<key>XDG_STATE_HOME</key>
+		<string>/tmp/state</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>StandardOutPath</key>
+	<string>/Users/me/Library/Logs/fibre/watch.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/me/Library/Logs/fibre/watch.log</string>
+</dict>
+</plist>
