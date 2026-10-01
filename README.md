@@ -2,10 +2,10 @@
 
 # fibre
 
-fibre is a dotfile manager for macOS. It symlinks each file in a dotfiles set
+fibre is a dotfile manager. It symlinks each file in a dotfiles set
 into the directory where that file belongs, and a background watcher copies
 changes made in that directory back into the set. When an app creates a new
-file in `~/.claude`, the file lands in your dotfiles repo, ready to commit.
+file in `~/.claude`, the file is synced.
 
 # Why
 
@@ -17,8 +17,7 @@ files inside the directory one by one. Stow falls back to per-file links when:
 - two packages put files in the same directory
 - you pass `--no-folding`
 
-After that, a file an app creates in the target is a real file there. Stow
-never moves it into the package, so it never reaches your dotfiles repo.
+After that, a file an app creates in the target is not synced.
 
 fibre always links individual files, and its watcher handles the changes that
 links alone miss:
@@ -34,15 +33,6 @@ links alone miss:
   automatically.
 - When the watcher starts, it reconciles changes made while it was stopped.
 
-fibre also differs from Stow in two ways that don't involve the watcher:
-
-- Each set declares its own `dest`. A `claude` set with `dest: $HOME/.claude`
-  keeps `settings.json` at its top level. Stow would need
-  `.claude/settings.json` mirrored under `$HOME`.
-- `exclude` patterns match single files at any depth and apply in both
-  directions. fibre doesn't link excluded files from the set, and the watcher
-  doesn't adopt excluded files from `dest`. This keeps caches, history and
-  machine-specific files out of the repo.
 
 # Installation
 
