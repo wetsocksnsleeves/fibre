@@ -11,12 +11,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/exec"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/root"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/exec"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 func newExcludeCmd() *cobra.Command {
@@ -24,7 +24,7 @@ func newExcludeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exclude <path>[,<path>...]",
 		Short: "Add paths to the current set's exclude list",
-		Long: `Add paths or globs to a set's exclude list in its fibre.yaml.
+		Long: `Add paths or globs to a set's exclude list in its rivet.yaml.
 
 Run exclude inside a set, or inside a linked set's dest. Paths are relative
 to the working directory and are written relative to the set. Separate

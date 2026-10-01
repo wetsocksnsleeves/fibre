@@ -1,18 +1,18 @@
 #!/bin/sh
-# Installs the fibre binary from a GitHub release.
+# Installs the rivet binary from a GitHub release.
 #
-#   curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/fibre/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/rivet/main/install.sh | sh
 #
-# FIBRE_VERSION picks a release tag (default: the latest release).
-# FIBRE_INSTALL_DIR picks the install directory (default: ~/.local/bin).
+# RIVET_VERSION picks a release tag (default: the latest release).
+# RIVET_INSTALL_DIR picks the install directory (default: ~/.local/bin).
 set -eu
 
-repo="wetsocksnsleeves/fibre"
-version="${FIBRE_VERSION:-latest}"
-install_dir="${FIBRE_INSTALL_DIR:-$HOME/.local/bin}"
+repo="wetsocksnsleeves/rivet"
+version="${RIVET_VERSION:-latest}"
+install_dir="${RIVET_INSTALL_DIR:-$HOME/.local/bin}"
 
 fail() {
-	echo "fibre: $*" >&2
+	echo "rivet: $*" >&2
 	exit 1
 }
 
@@ -29,14 +29,14 @@ arm64 | aarch64) arch=arm64 ;;
 *) fail "unsupported architecture: $arch" ;;
 esac
 
-asset="fibre_${os}_${arch}"
+asset="rivet_${os}_${arch}"
 if [ "$version" = latest ]; then
 	url="https://github.com/$repo/releases/latest/download/$asset"
 else
 	url="https://github.com/$repo/releases/download/$version/$asset"
 fi
 
-tmp=$(mktemp "${TMPDIR:-/tmp}/fibre.XXXXXX")
+tmp=$(mktemp "${TMPDIR:-/tmp}/rivet.XXXXXX")
 trap 'rm -f "$tmp"' EXIT
 
 echo "Downloading $url"
@@ -44,10 +44,10 @@ curl -fsSL "$url" -o "$tmp" || fail "download failed: $url"
 chmod +x "$tmp"
 
 mkdir -p "$install_dir"
-mv "$tmp" "$install_dir/fibre"
-echo "Installed fibre to $install_dir/fibre"
+mv "$tmp" "$install_dir/rivet"
+echo "Installed rivet to $install_dir/rivet"
 
 case ":$PATH:" in
 *":$install_dir:"*) ;;
-*) echo "Add $install_dir to your PATH to run fibre." ;;
+*) echo "Add $install_dir to your PATH to run rivet." ;;
 esac

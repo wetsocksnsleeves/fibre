@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
 )
 
 const (
@@ -35,7 +35,7 @@ func linkPlan(set, destTree fsnap.Tree, exclude ...string) []Action {
 
 func TestLink(t *testing.T) {
 	set := fsnap.New().
-		File("fibre.yaml", "dest: ~/.claude").
+		File("rivet.yaml", "dest: ~/.claude").
 		File("settings.json", "{}").
 		File("agents/reviewer.md", "review").
 		Tree()
@@ -127,7 +127,7 @@ func TestLink(t *testing.T) {
 
 func TestLinkExclusion(t *testing.T) {
 	set := fsnap.New().
-		File("fibre.yaml", "dest: ~/.claude").
+		File("rivet.yaml", "dest: ~/.claude").
 		File("settings.json", "{}").
 		File("history.jsonl", "h").
 		File("projects/a/session.json", "s").
@@ -149,10 +149,10 @@ func TestLinkExclusion(t *testing.T) {
 	}
 }
 
-func TestLinkNestedFibreYAMLIsNotExcluded(t *testing.T) {
-	set := fsnap.New().File("fibre.yaml", "dest: /d").File("sub/fibre.yaml", "x").Tree()
+func TestLinkNestedRivetYAMLIsNotExcluded(t *testing.T) {
+	set := fsnap.New().File("rivet.yaml", "dest: /d").File("sub/rivet.yaml", "x").Tree()
 	got := render(linkPlan(set, fsnap.New().Tree()))
-	want := []string{"mkdir sub", "link sub/fibre.yaml"}
+	want := []string{"mkdir sub", "link sub/rivet.yaml"}
 	if !slices.Equal(got, want) {
 		t.Errorf("plan:\n got  %q\n want %q", got, want)
 	}

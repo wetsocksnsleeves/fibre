@@ -12,10 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/launchd"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
-	"github.com/wetsocksnsleeves/fibre/internal/watch"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/launchd"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/watch"
 )
 
 func newWatchCmd() *cobra.Command {
@@ -32,7 +32,7 @@ func newWatchCmd() *cobra.Command {
 On start it reconciles every linked set, then watches each set and its dest:
 new files in dest are adopted into the set, real files that replaced links
 (atomic saves) are adopted and relinked, new set files are linked, and
-deletions propagate both ways. Conflicts are left for ` + "`fibre status`" + `.
+deletions propagate both ways. Conflicts are left for ` + "`rivet status`" + `.
 
 It reads linked sets from state, so it runs from any directory.`,
 		Args: cobra.NoArgs,
@@ -113,7 +113,7 @@ It reads linked sets from state, so it runs from any directory.`,
 	}
 	stop := &cobra.Command{
 		Use:   "stop",
-		Short: "Stop the watcher agent until the next login or `fibre watch start`",
+		Short: "Stop the watcher agent until the next login or `rivet watch start`",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			m, err := newManager()
@@ -127,7 +127,7 @@ It reads linked sets from state, so it runs from any directory.`,
 			if err := m.Stop(); err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "Stopped the watcher. It starts again at login, or with `fibre watch start`.")
+			fmt.Fprintln(cmd.OutOrStdout(), "Stopped the watcher. It starts again at login, or with `rivet watch start`.")
 			return nil
 		},
 	}
@@ -170,7 +170,7 @@ var newManager = func() (*launchd.Manager, error) {
 
 func printWatchStatus(w io.Writer, m *launchd.Manager, stateDir string) {
 	s := m.Status()
-	agent := "not installed (run `fibre watch install`)"
+	agent := "not installed (run `rivet watch install`)"
 	if s.Installed {
 		agent = "installed (" + displayPath(m.PlistPath) + ")"
 	}
@@ -196,5 +196,5 @@ func watcherLine(stateDir string) string {
 	case running:
 		return "Watcher is running (pid " + strconv.Itoa(pid) + ")."
 	}
-	return "Watcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground)."
+	return "Watcher is not running, so nothing is synced automatically. Start it with `rivet watch install` (or `rivet watch run` in the foreground)."
 }

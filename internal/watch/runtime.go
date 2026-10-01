@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/exec"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
-	"github.com/wetsocksnsleeves/fibre/internal/workspace"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/exec"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/workspace"
 )
 
 // Runtime is the watcher process: it watches every linked set and its dest,
@@ -253,7 +253,7 @@ func (rt *runtime) cycle(paths []string) {
 		s := byName[p.Name]
 		for _, a := range p.Actions {
 			if a.Op == plan.OpConflict || a.Op == plan.OpUntracked {
-				rt.log.Printf("%s: %s %s left in place; see `fibre status`", s.Name, a.Op, a.Path)
+				rt.log.Printf("%s: %s %s left in place; see `rivet status`", s.Name, a.Op, a.Path)
 			}
 		}
 		actions := plan.Actionable(p.Actions)

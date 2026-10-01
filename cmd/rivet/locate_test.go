@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wetsocksnsleeves/fibre/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
 )
 
 func TestStatusInsideDestShowsThatSet(t *testing.T) {

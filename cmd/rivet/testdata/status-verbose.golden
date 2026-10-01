@@ -1,7 +1,7 @@
 claude → ~/.claude   2 linked
-  Conflicts (resolve with `fibre link claude` and --adopt, --force or --skip):
+  Conflicts (resolve with `rivet link claude` and --adopt, --force or --skip):
     conflict.json  (dest file differs from the set's)
-  Not linked (new in the set; the watcher or `fibre link claude` will link them):
+  Not linked (new in the set; the watcher or `rivet link claude` will link them):
     commands/new.md
   Modified in dest (a real file replaced the link; the watcher will copy it into the set):
     keybindings.json
@@ -22,6 +22,6 @@ tools → ~/.local   1 linked
   Untracked, claimed by more than one set (exclude it from all but one):
     bin/myscript  (rofi, tools)
 
-zsh → ~   not linked (run `fibre link zsh`)
+zsh → ~   not linked (run `rivet link zsh`)
 
-Watcher is not running, so nothing is synced automatically. Start it with `fibre watch install` (or `fibre watch run` in the foreground).
+Watcher is not running, so nothing is synced automatically. Start it with `rivet watch install` (or `rivet watch run` in the foreground).

@@ -1,0 +1,10 @@
+Linked:
+  claude → ~/.claude       not synced
+  nvim   → ~/.config/nvim  synced
+  rofi   → ~/.local        not synced
+  tools  → ~/.local        not synced
+Not linked (run `rivet link <set>`):
+  zsh    → ~
+Run `rivet status -v` to see what needs attention.
+
+Watcher is not running, so nothing is synced automatically. Start it with `rivet watch install` (or `rivet watch run` in the foreground).

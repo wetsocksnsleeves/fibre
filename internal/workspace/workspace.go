@@ -13,10 +13,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 // Set is a linked set with its config loaded. Err is set when the config
@@ -29,7 +29,7 @@ type Set struct {
 }
 
 // Ignored are directories never read as part of a dest, even when a dest
-// contains them: the dotfiles root and fibre's state directory.
+// contains them: the dotfiles root and rivet's state directory.
 type Ignored struct {
 	Root, StateDir string
 }
@@ -55,7 +55,7 @@ func Load(st *state.State, env config.Env) []Set {
 		case err != nil:
 			s.Err = err
 		case cfg.Dest != linked.Dest:
-			s.Err = fmt.Errorf("fibre.yaml now says dest %s but the set is linked into %s; unlink and link again", cfg.Dest, linked.Dest)
+			s.Err = fmt.Errorf("rivet.yaml now says dest %s but the set is linked into %s; unlink and link again", cfg.Dest, linked.Dest)
 		default:
 			s.Config = cfg
 		}

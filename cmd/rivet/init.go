@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/exec"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/root"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/exec"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 func newInitCmd() *cobra.Command {
@@ -29,7 +29,7 @@ func newInitCmd() *cobra.Command {
 		Short: "Make the current directory a dotfiles root, or create a set in the current root",
 		Long: `With no set name, init makes the current directory a dotfiles root.
 
-With a set name, init creates the set and its fibre.yaml in the current root.
+With a set name, init creates the set and its rivet.yaml in the current root.
 If dest already exists, every non-excluded file in it is moved into the set
 and linked back. Excluded files stay in dest.`,
 		Args: cobra.MaximumNArgs(1),
@@ -37,7 +37,7 @@ and linked back. Excluded files stay in dest.`,
 			if len(args) == 0 {
 				for _, f := range []string{"dest", "exclude", "strict"} {
 					if cmd.Flags().Changed(f) {
-						return fmt.Errorf("--%s needs a set name: fibre init <set> --dest <path>", f)
+						return fmt.Errorf("--%s needs a set name: rivet init <set> --dest <path>", f)
 					}
 				}
 				return initRoot(cmd.OutOrStdout())
@@ -48,7 +48,7 @@ and linked back. Excluded files stay in dest.`,
 			return initSet(cmd.OutOrStdout(), cmd.ErrOrStderr(), args[0], dest, exclude, strict)
 		},
 	}
-	cmd.Flags().StringVarP(&dest, "dest", "d", "", "directory the set is linked into (~ and $VARS are kept as written in fibre.yaml)")
+	cmd.Flags().StringVarP(&dest, "dest", "d", "", "directory the set is linked into (~ and $VARS are kept as written in rivet.yaml)")
 	cmd.Flags().StringSliceVarP(&exclude, "exclude", "e", nil, "comma-separated globs to exclude, relative to the set")
 	cmd.Flags().BoolVarP(&strict, "strict", "s", false, "make the set link-only: never import or adopt files from dest")
 	return cmd
@@ -64,14 +64,14 @@ func initRoot(w io.Writer) error {
 		return err
 	}
 	if created {
-		fmt.Fprintf(w, "Initialized fibre root in %s\n", dir)
+		fmt.Fprintf(w, "Initialized rivet root in %s\n", dir)
 	} else {
-		fmt.Fprintf(w, "%s is already a fibre root\n", dir)
+		fmt.Fprintf(w, "%s is already a rivet root\n", dir)
 	}
 	return nil
 }
 
-// setFile is the fibre.yaml init writes.
+// setFile is the rivet.yaml init writes.
 type setFile struct {
 	Dest    string   `yaml:"dest"`
 	Exclude []string `yaml:"exclude,omitempty"`
@@ -131,7 +131,7 @@ func initSet(stdout, stderr io.Writer, name, destArg string, exclude []string, s
 		if strict && destExists {
 			fmt.Fprintf(stdout, "%s is strict, so nothing was imported from %s\n", name, displayPath(cfg.Dest))
 		}
-		fmt.Fprintf(stdout, "add files to the set, then run `fibre link %s`\n", name)
+		fmt.Fprintf(stdout, "add files to the set, then run `rivet link %s`\n", name)
 		return nil
 	}
 
@@ -139,8 +139,8 @@ func initSet(stdout, stderr io.Writer, name, destArg string, exclude []string, s
 		if err := checkState(st, rootDir, name, cfg); err != nil {
 			return err
 		}
-		// The root or fibre's state may sit inside dest (e.g. dest ~/.local
-		// holds ~/.local/state/fibre); never import them.
+		// The root or rivet's state may sit inside dest (e.g. dest ~/.local
+		// holds ~/.local/state/rivet); never import them.
 		destTree, err := fsnap.Scan(cfg.Dest, func(rel string) bool {
 			p := filepath.Join(cfg.Dest, filepath.FromSlash(rel))
 			return cfg.Excluded(rel) || p == rootDir || p == stateDir
@@ -194,7 +194,7 @@ func writeSet(setDir string, data []byte) error {
 	return os.WriteFile(filepath.Join(setDir, config.FileName), data, 0o644)
 }
 
-// configDest is the dest value written to fibre.yaml. A value the shell left
+// configDest is the dest value written to rivet.yaml. A value the shell left
 // unexpanded (~ or $VAR, because it was quoted) is kept as written. Anything
 // else is made absolute, and a path under home is written with ~ so the set
 // works on machines with a different home directory.

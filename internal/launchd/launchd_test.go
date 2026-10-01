@@ -30,16 +30,16 @@ func golden(t *testing.T, name string, got []byte) {
 }
 
 func TestPlist(t *testing.T) {
-	a := Agent{Label: Label, Program: "/opt/homebrew/bin/fibre", LogPath: "/Users/me/Library/Logs/fibre/watch.log"}
+	a := Agent{Label: Label, Program: "/opt/homebrew/bin/rivet", LogPath: "/Users/me/Library/Logs/rivet/watch.log"}
 	golden(t, "agent.plist", a.Plist())
 }
 
 func TestPlistWithEnvAndEscaping(t *testing.T) {
 	a := Agent{
 		Label:   Label,
-		Program: "/Users/me/code/a&b/fibre",
+		Program: "/Users/me/code/a&b/rivet",
 		Env:     map[string]string{"XDG_STATE_HOME": "/tmp/state", "A": "<1>"},
-		LogPath: "/Users/me/Library/Logs/fibre/watch.log",
+		LogPath: "/Users/me/Library/Logs/rivet/watch.log",
 	}
 	golden(t, "agent-env.plist", a.Plist())
 }
@@ -94,8 +94,8 @@ func newTestManager(t *testing.T) (*Manager, *fakeLaunchctl) {
 	ctl := &fakeLaunchctl{}
 	return &Manager{
 		Agent: Agent{
-			Label: Label, Program: "/bin/fibre",
-			LogPath: filepath.Join(dir, "Logs", "fibre", "watch.log"),
+			Label: Label, Program: "/bin/rivet",
+			LogPath: filepath.Join(dir, "Logs", "rivet", "watch.log"),
 		},
 		PlistPath: filepath.Join(dir, "LaunchAgents", Label+".plist"),
 		Domain:    "gui/501",

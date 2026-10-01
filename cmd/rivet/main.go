@@ -1,4 +1,4 @@
-// Command fibre links dotfile sets into their destinations and keeps them in
+// Command rivet links dotfile sets into their destinations and keeps them in
 // sync.
 package main
 

@@ -18,8 +18,8 @@ func TestExcludeInsideSet(t *testing.T) {
 	}
 	want := "dest: " + filepath.Join(e.base, "home", ".claude") +
 		"\nexclude:\n  - projects/**\n  - agents/draft.md\n  - agents/old\n  - history.jsonl\n"
-	if got := readFile(t, filepath.Join(setDir, "fibre.yaml")); got != want {
-		t.Errorf("fibre.yaml =\n%s\nwant\n%s", got, want)
+	if got := readFile(t, filepath.Join(setDir, "rivet.yaml")); got != want {
+		t.Errorf("rivet.yaml =\n%s\nwant\n%s", got, want)
 	}
 	if want := "excluded agents/draft.md, agents/old, history.jsonl from claude\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
@@ -78,8 +78,8 @@ func TestExcludeDirectoryInsideDest(t *testing.T) {
 		t.Fatalf("exclude: %v\n%s", err, out)
 	}
 	assertRealFile(t, filepath.Join(dest, "agents", "reviewer.md"), "review")
-	if !strings.Contains(readFile(t, filepath.Join(setDir, "fibre.yaml")), "  - agents\n") {
-		t.Error("fibre.yaml does not exclude agents")
+	if !strings.Contains(readFile(t, filepath.Join(setDir, "rivet.yaml")), "  - agents\n") {
+		t.Error("rivet.yaml does not exclude agents")
 	}
 }
 
@@ -92,8 +92,8 @@ func TestExcludeWithSetFlag(t *testing.T) {
 	if out, err := run(t, "exclude", "--set", "claude", "x.json"); err != nil {
 		t.Fatalf("exclude --set: %v\n%s", err, out)
 	}
-	if !strings.Contains(readFile(t, filepath.Join(setDir, "fibre.yaml")), "  - x.json\n") {
-		t.Error("fibre.yaml does not exclude x.json")
+	if !strings.Contains(readFile(t, filepath.Join(setDir, "rivet.yaml")), "  - x.json\n") {
+		t.Error("rivet.yaml does not exclude x.json")
 	}
 	if _, err := run(t, "exclude", "--set", "nope", "x.json"); err == nil {
 		t.Error("exclude --set nope succeeded")
@@ -104,14 +104,14 @@ func TestExcludeRejectsPathsOutsideTheSet(t *testing.T) {
 	e := newEnv(t)
 	setDir, _ := claudeSet(t, e)
 	t.Chdir(setDir)
-	before := readFile(t, filepath.Join(setDir, "fibre.yaml"))
-	for _, p := range []string{"../other", ".", "fibre.yaml", filepath.Join(e.base, "elsewhere"), "ok.json,[bad"} {
+	before := readFile(t, filepath.Join(setDir, "rivet.yaml"))
+	for _, p := range []string{"../other", ".", "rivet.yaml", filepath.Join(e.base, "elsewhere"), "ok.json,[bad"} {
 		if _, err := run(t, "exclude", p); err == nil {
 			t.Errorf("exclude %q succeeded", p)
 		}
 	}
-	if got := readFile(t, filepath.Join(setDir, "fibre.yaml")); got != before {
-		t.Errorf("fibre.yaml changed:\n%s", got)
+	if got := readFile(t, filepath.Join(setDir, "rivet.yaml")); got != before {
+		t.Errorf("rivet.yaml changed:\n%s", got)
 	}
 }
 

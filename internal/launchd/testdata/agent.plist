@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>io.github.wetsocksnsleeves.fibre</string>
+	<string>io.github.wetsocksnsleeves.rivet</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/opt/homebrew/bin/fibre</string>
+		<string>/opt/homebrew/bin/rivet</string>
 		<string>watch</string>
 		<string>run</string>
 	</array>
@@ -18,8 +18,8 @@
 		<false/>
 	</dict>
 	<key>StandardOutPath</key>
-	<string>/Users/me/Library/Logs/fibre/watch.log</string>
+	<string>/Users/me/Library/Logs/rivet/watch.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/me/Library/Logs/fibre/watch.log</string>
+	<string>/Users/me/Library/Logs/rivet/watch.log</string>
 </dict>
 </plist>

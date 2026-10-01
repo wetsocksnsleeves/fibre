@@ -1,4 +1,4 @@
-module github.com/wetsocksnsleeves/fibre
+module github.com/wetsocksnsleeves/rivet
 
 go 1.27.1
 

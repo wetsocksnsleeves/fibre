@@ -1,6 +1,6 @@
 package plan
 
-import "github.com/wetsocksnsleeves/fibre/internal/fsnap"
+import "github.com/wetsocksnsleeves/rivet/internal/fsnap"
 
 // Skipped is a dest path Import leaves in place because it is not a regular
 // file, such as a symlink left by Stow.

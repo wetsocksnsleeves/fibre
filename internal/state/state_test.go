@@ -23,7 +23,7 @@ func TestLoadMissing(t *testing.T) {
 }
 
 func TestSaveLoadRoundTrip(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "fibre") // Save creates it
+	dir := filepath.Join(t.TempDir(), "rivet") // Save creates it
 	at := time.Date(2026, 9, 30, 10, 12, 0, 0, time.UTC)
 	in := &State{
 		Root: "/Users/me/.dotfiles",
@@ -77,7 +77,7 @@ func TestDefaultDirHonorsXDG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "/xdg/state/fibre" {
+	if got != "/xdg/state/rivet" {
 		t.Errorf("DefaultDir = %q", got)
 	}
 }
@@ -89,7 +89,7 @@ func TestDefaultDirFallsBackToHome(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "/Users/me/.local/state/fibre" {
+	if got != "/Users/me/.local/state/rivet" {
 		t.Errorf("DefaultDir = %q", got)
 	}
 }

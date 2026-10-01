@@ -6,7 +6,7 @@ import (
 
 func newRootCmd(version string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "fibre",
+		Use:          "rivet",
 		Short:        "Manage your dotfiles, keep them in sync, and keep machine-specific files local",
 		Version:      version,
 		SilenceUsage: true,

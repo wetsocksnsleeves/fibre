@@ -1,5 +1,5 @@
-// Package state reads and writes fibre's per-machine state: which sets are
-// linked, where, and the manifest of links fibre created for each.
+// Package state reads and writes rivet's per-machine state: which sets are
+// linked, where, and the manifest of links rivet created for each.
 package state
 
 import (
@@ -28,20 +28,20 @@ type Set struct {
 	Dest     string    `yaml:"dest"`
 	LinkedAt time.Time `yaml:"linked_at"`
 	// Links is the manifest: slash-separated paths, relative to Dest, that
-	// fibre has linked. Sorted.
+	// rivet has linked. Sorted.
 	Links []string `yaml:"links"`
 }
 
-// DefaultDir is $XDG_STATE_HOME/fibre, or ~/.local/state/fibre.
+// DefaultDir is $XDG_STATE_HOME/rivet, or ~/.local/state/rivet.
 func DefaultDir() (string, error) {
 	if d := os.Getenv("XDG_STATE_HOME"); d != "" {
-		return filepath.Join(d, "fibre"), nil
+		return filepath.Join(d, "rivet"), nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".local", "state", "fibre"), nil
+	return filepath.Join(home, ".local", "state", "rivet"), nil
 }
 
 // Load reads the state in dir. A missing file is an empty state.

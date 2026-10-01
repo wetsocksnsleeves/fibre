@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wetsocksnsleeves/fibre/internal/root"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 // locate finds the root for commands that work from a linked dest as well

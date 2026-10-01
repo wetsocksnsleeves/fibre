@@ -1,6 +1,6 @@
 package plan
 
-import "github.com/wetsocksnsleeves/fibre/internal/fsnap"
+import "github.com/wetsocksnsleeves/rivet/internal/fsnap"
 
 // UnlinkInput is everything Unlink needs to plan unlinking one set.
 type UnlinkInput struct {

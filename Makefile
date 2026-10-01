@@ -4,16 +4,16 @@ PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64
 .PHONY: build test dist
 
 build:
-	go build -ldflags "-X main.version=$(VERSION)" -o bin/fibre ./cmd/fibre
+	go build -ldflags "-X main.version=$(VERSION)" -o bin/rivet ./cmd/rivet
 
 test:
 	go vet ./...
 	go test -race ./...
 
-# Release binaries named as install.sh expects: dist/fibre_<os>_<arch>.
+# Release binaries named as install.sh expects: dist/rivet_<os>_<arch>.
 dist:
 	rm -rf dist
 	for p in $(PLATFORMS); do \
 		os=$${p%/*}; arch=$${p#*/}; \
-		GOOS=$$os GOARCH=$$arch go build -ldflags "-X main.version=$(VERSION)" -o dist/fibre_$${os}_$${arch} ./cmd/fibre || exit 1; \
+		GOOS=$$os GOARCH=$$arch go build -ldflags "-X main.version=$(VERSION)" -o dist/rivet_$${os}_$${arch} ./cmd/rivet || exit 1; \
 	done

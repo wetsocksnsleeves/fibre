@@ -21,7 +21,7 @@ func TestVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("--version: %v", err)
 	}
-	if want := "fibre version 1.2.3\n"; out != want {
+	if want := "rivet version 1.2.3\n"; out != want {
 		t.Errorf("--version output = %q, want %q", out, want)
 	}
 }

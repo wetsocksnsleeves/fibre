@@ -1,8 +1,8 @@
 ![CODED BY](https://img.shields.io/badge/CODED%20BY-LLM-d29922?style=for-the-badge)
 
-# fibre
+# rivet
 
-fibre is a dotfile manager. It symlinks each file in a dotfiles set
+rivet is a dotfile manager. It symlinks each file in a dotfiles set
 into the directory where that file belongs, and a background watcher copies
 changes made in that directory back into the set. When an app creates a new
 file in `~/.claude`, the file is synced.
@@ -19,7 +19,7 @@ files inside the directory one by one. Stow falls back to per-file links when:
 
 After that, a file an app creates in the target is not synced.
 
-fibre always links individual files, and its watcher handles the changes that
+rivet always links individual files, and its watcher handles the changes that
 links alone miss:
 
 - A new file in the destination is moved into the set and replaced with a
@@ -39,7 +39,7 @@ links alone miss:
 To install, run:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/fibre/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/rivet/main/install.sh | sh
 ```
 
 # Usage
@@ -48,29 +48,29 @@ curl -fsSL https://raw.githubusercontent.com/wetsocksnsleeves/fibre/main/install
 
 ```sh
 mkdir ~/.dotfiles && cd ~/.dotfiles
-fibre init
+rivet init
 ```
 
-`fibre init` creates a `.fibre` marker file. Every other command looks for it
+`rivet init` creates a `.rivet` marker file. Every other command looks for it
 in the current directory and its parents, the way git looks for `.git`.
 
 ## Add a set
 
 ```sh
-fibre init claude --dest '$HOME/.claude' --exclude 'history.jsonl,projects/**'
+rivet init claude --dest '$HOME/.claude' --exclude 'history.jsonl,projects/**'
 ```
 
-This creates `claude/fibre.yaml`. The quotes keep `$HOME` unexpanded in the
+This creates `claude/rivet.yaml`. The quotes keep `$HOME` unexpanded in the
 file, so the same set works on machines with different home directories.
 
-If `~/.claude` already exists, fibre moves each file that isn't excluded into
+If `~/.claude` already exists, rivet moves each file that isn't excluded into
 `claude/` and links it back. Excluded files stay in `~/.claude`.
 
 ## Link a set on another machine
 
 ```sh
 git clone <your-dotfiles-repo> ~/.dotfiles && cd ~/.dotfiles
-fibre link claude
+rivet link claude
 ```
 
 If a different file already exists at a target path, `link` lists every
@@ -79,27 +79,27 @@ conflict and changes nothing. Run it again with one of these flags:
 | Flag | Effect |
 |---|---|
 | `--adopt` | Move the existing file into the set, overwriting the set's version, then link it. |
-| `--force` | Rename the existing file to `<name>.fibre-bak`, then link the set's version. |
+| `--force` | Rename the existing file to `<name>.rivet-bak`, then link the set's version. |
 | `--skip` | Leave conflicting paths alone and link everything else. |
 
-A real file with the same contents as the set's file is not a conflict. fibre
+A real file with the same contents as the set's file is not a conflict. rivet
 replaces it with a link.
 
 ## Start the watcher
 
 ```sh
-fibre watch install
+rivet watch install
 ```
 
 This registers the watcher as a launchd agent that starts at login, and starts
-it now. `fibre watch stop`, `fibre watch start`, `fibre watch status` and
-`fibre watch uninstall` manage the agent. `fibre watch run` runs the watcher
+it now. `rivet watch stop`, `rivet watch start`, `rivet watch status` and
+`rivet watch uninstall` manage the agent. `rivet watch run` runs the watcher
 in the foreground instead.
 
 ## Check status
 
 ```sh
-fibre status
+rivet status
 ```
 
 Prints one line per set with whether it is in sync, linked sets first. The
@@ -110,9 +110,9 @@ that set.
 Linked:
   claude → ~/.claude       not synced
   nvim   → ~/.config/nvim  synced
-Not linked (run `fibre link <set>`):
+Not linked (run `rivet link <set>`):
   zsh    → ~
-Run `fibre status -v` to see what needs attention.
+Run `rivet status -v` to see what needs attention.
 ```
 
 `-v` lists the paths that need attention in each set: conflicts, files the
@@ -129,10 +129,10 @@ claude → ~/.claude   2 linked
 
 ```sh
 cd ~/.claude
-fibre exclude history.jsonl,todos/,'projects/**'
+rivet exclude history.jsonl,todos/,'projects/**'
 ```
 
-Adds each path to the exclude list in the set's `fibre.yaml`. Run it inside a
+Adds each path to the exclude list in the set's `rivet.yaml`. Run it inside a
 set or inside a linked set's dest, or pass `--set <name>` from anywhere in the
 root. Paths are relative to the working directory, can be globs, and can be
 separated by commas or spaces. A path that is already linked is replaced with
@@ -142,16 +142,16 @@ stays in the repo for you to delete.
 ## Stop managing a set
 
 ```sh
-fibre unlink claude
+rivet unlink claude
 ```
 
 Replaces each of the set's links with a copy of the file it pointed to. The
 files in `~/.claude` keep working with the same contents, but changes no
 longer sync in either direction. The set's files stay in the repo.
 
-# fibre.yaml
+# rivet.yaml
 
-Each set has a `fibre.yaml` at its top level.
+Each set has a `rivet.yaml` at its top level.
 
 ```yaml
 dest: $HOME/.claude
@@ -163,16 +163,16 @@ strict: false
 
 | Key | Meaning |
 |---|---|
-| `dest` | Required. The directory the set's files are linked into. The set's tree mirrors the tree under `dest`. fibre expands `~` and environment variables. |
-| `exclude` | Glob patterns relative to the set and to `dest`. `**` matches any number of directories. `fibre.yaml` is always excluded. |
+| `dest` | Required. The directory the set's files are linked into. The set's tree mirrors the tree under `dest`. rivet expands `~` and environment variables. |
+| `exclude` | Glob patterns relative to the set and to `dest`. `**` matches any number of directories. `rivet.yaml` is always excluded. |
 | `strict` | Defaults to `false`. When `true`, the watcher still restores links after atomic saves but never adopts new files, and `status` doesn't list untracked files. Use it for sets with a broad `dest` like `$HOME`. |
 
-Several sets can share a `dest`. When a new file appears, fibre adopts it into
+Several sets can share a `dest`. When a new file appears, rivet adopts it into
 the non-strict set whose `dest` is the deepest directory containing it, so a
 new file in `~/.claude` goes to a `claude` set rather than one with
-`dest: $HOME`. If two sets have the same `dest`, fibre leaves the file in
+`dest: $HOME`. If two sets have the same `dest`, rivet leaves the file in
 place and `status` lists it as claimed by both.
 
-fibre keeps per-machine state in `~/.local/state/fibre/state.yaml`, outside
+rivet keeps per-machine state in `~/.local/state/rivet/state.yaml`, outside
 the repo. It records which sets are linked on that machine, so each machine
 can link a different subset.

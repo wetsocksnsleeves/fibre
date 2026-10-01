@@ -1,4 +1,4 @@
-// Package config loads and validates a set's fibre.yaml.
+// Package config loads and validates a set's rivet.yaml.
 package config
 
 import (
@@ -17,7 +17,7 @@ import (
 
 // FileName is the set config file at the root of each set. It is always
 // excluded from linking and adoption.
-const FileName = "fibre.yaml"
+const FileName = "rivet.yaml"
 
 // Config is a validated set config. Dest is absolute and cleaned, and every
 // exclude pattern is valid.
@@ -110,11 +110,11 @@ func destString(n yaml.Node) (string, error) {
 // Excluded reports whether rel, a slash-separated path relative to the set or
 // dest, is excluded. A path is excluded if it or any of its parent
 // directories matches a pattern, so excluding a directory excludes its
-// contents. The set's own FileName and the backup and temp files fibre
-// creates (*.fibre-bak, *.fibre-bak.N, *.fibre-tmp) are always excluded.
+// contents. The set's own FileName and the backup and temp files rivet
+// creates (*.rivet-bak, *.rivet-bak.N, *.rivet-tmp) are always excluded.
 func (c *Config) Excluded(rel string) bool {
 	rel = path.Clean(rel)
-	if rel == FileName || isFibreFile(path.Base(rel)) {
+	if rel == FileName || isRivetFile(path.Base(rel)) {
 		return true
 	}
 	for p := rel; p != "." && p != "/"; p = path.Dir(p) {
@@ -128,15 +128,15 @@ func (c *Config) Excluded(rel string) bool {
 	return false
 }
 
-func isFibreFile(base string) bool {
-	if strings.HasSuffix(base, ".fibre-tmp") || strings.HasSuffix(base, ".fibre-bak") {
+func isRivetFile(base string) bool {
+	if strings.HasSuffix(base, ".rivet-tmp") || strings.HasSuffix(base, ".rivet-bak") {
 		return true
 	}
-	i := strings.LastIndex(base, ".fibre-bak.")
+	i := strings.LastIndex(base, ".rivet-bak.")
 	if i < 0 {
 		return false
 	}
-	n := base[i+len(".fibre-bak."):]
+	n := base[i+len(".rivet-bak."):]
 	return n != "" && strings.Trim(n, "0123456789") == ""
 }
 
@@ -178,7 +178,7 @@ func expand(s string, env Env) (string, error) {
 	return out, nil
 }
 
-// AddExcludes returns data, a fibre.yaml, with patterns appended to its
+// AddExcludes returns data, a rivet.yaml, with patterns appended to its
 // exclude list, and the patterns that were not already in it. Other keys and
 // comments are kept. Each pattern is validated.
 func AddExcludes(data []byte, patterns []string) ([]byte, []string, error) {
@@ -196,7 +196,7 @@ func AddExcludes(data []byte, patterns []string) ([]byte, []string, error) {
 	}
 	top := doc.Content[0]
 	if top.Kind != yaml.MappingNode {
-		return nil, nil, errors.New("fibre.yaml is not a mapping")
+		return nil, nil, errors.New("rivet.yaml is not a mapping")
 	}
 
 	var list *yaml.Node

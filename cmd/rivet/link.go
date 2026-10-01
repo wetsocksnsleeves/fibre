@@ -13,12 +13,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/wetsocksnsleeves/fibre/internal/config"
-	"github.com/wetsocksnsleeves/fibre/internal/exec"
-	"github.com/wetsocksnsleeves/fibre/internal/fsnap"
-	"github.com/wetsocksnsleeves/fibre/internal/plan"
-	"github.com/wetsocksnsleeves/fibre/internal/root"
-	"github.com/wetsocksnsleeves/fibre/internal/state"
+	"github.com/wetsocksnsleeves/rivet/internal/config"
+	"github.com/wetsocksnsleeves/rivet/internal/exec"
+	"github.com/wetsocksnsleeves/rivet/internal/fsnap"
+	"github.com/wetsocksnsleeves/rivet/internal/plan"
+	"github.com/wetsocksnsleeves/rivet/internal/root"
+	"github.com/wetsocksnsleeves/rivet/internal/state"
 )
 
 func newLinkCmd() *cobra.Command {
@@ -155,10 +155,10 @@ func linkSet(stderr io.Writer, stateDir string, st *state.State, rootDir, name, 
 // dest than the one it is linked into.
 func checkState(st *state.State, rootDir, name string, cfg *config.Config) error {
 	if st.Root != "" && st.Root != rootDir && len(st.Linked) > 0 {
-		return fmt.Errorf("this machine has sets linked from %s; fibre manages one root per machine", st.Root)
+		return fmt.Errorf("this machine has sets linked from %s; rivet manages one root per machine", st.Root)
 	}
 	if prev := st.Linked[name]; prev != nil && prev.Dest != cfg.Dest {
-		return fmt.Errorf("%s is linked into %s but its fibre.yaml now says %s; unlink it first", name, displayPath(prev.Dest), displayPath(cfg.Dest))
+		return fmt.Errorf("%s is linked into %s but its rivet.yaml now says %s; unlink it first", name, displayPath(prev.Dest), displayPath(cfg.Dest))
 	}
 	return nil
 }
