@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -40,6 +41,9 @@ func (b *syncBuffer) String() string {
 // startup reconciliation is done.
 func startWatcher(t *testing.T, e *env) *syncBuffer {
 	t.Helper()
+	if runtime.GOOS != "darwin" {
+		t.Skip("the watcher is only supported on macOS")
+	}
 	envCfg, err := config.OSEnv()
 	if err != nil {
 		t.Fatal(err)
@@ -66,6 +70,7 @@ func startWatcher(t *testing.T, e *env) *syncBuffer {
 	select {
 	case <-ready:
 	case err := <-done:
+		done <- nil // the cleanup is waiting on done; don't leave it blocked
 		t.Fatalf("watcher exited during startup: %v", err)
 	case <-time.After(10 * time.Second):
 		t.Fatal("watcher did not start")
